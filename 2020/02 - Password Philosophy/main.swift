@@ -42,12 +42,10 @@ func isValidByFirstRule(passwordLine: PasswordLine) -> Bool {
     let numOccurrences = countOccurrencesOf(sub: passwordLine.character, inTarget: passwordLine.password)
     
     if numOccurrences < passwordLine.min {
-        // this isn't valid, don't count it
         return false
     }
     
     if numOccurrences > passwordLine.max {
-        // this isn't valid, don't count it
         return false
     }
     
