@@ -20,6 +20,8 @@ for boardingPass in boardingPasses {
     allIds.append(pass.getId())
 }
 
+print("Maximum ID is \(maxId)")
+
 allIds = allIds.sorted()
 var lastId = -1
 for id in allIds {
@@ -30,9 +32,6 @@ for id in allIds {
     
     lastId = id
 }
-
-print(allIds)
-print("Maximum ID is \(maxId)")
 
 struct BoardingPass {
     let row: Int

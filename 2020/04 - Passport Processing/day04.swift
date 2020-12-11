@@ -17,8 +17,6 @@ for passportString in passportStrings {
     
     if isStronglyValid(passport: passportString) {
         stronglyValid += 1
-//        print(passportString)
-//        print("-- BREAK --")
     }
 }
 
