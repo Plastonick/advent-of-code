@@ -8,23 +8,61 @@ let rows = string.components(separatedBy: "\n")
 let calc = Claculator()
 
 let sum = rows.reduce(0) { $0 + calc.calculate($1) }
-
 print(sum)
+
+// print(calc.calculate("5 * 9 * (7 * 3 * 3 + 9 * 3 + (8 + 6 * 4))"))
 
 class Claculator {
     func calculate(_ s: String) -> Int {
         var str = s
+        print(s)
+
+        str = replaceSums(str)
+        str = replaceBrackets(str)
+
+        return flatCalculation(str)
+    }
+
+    private func replaceSums(_ s: String) -> String {
+        var str = s
+
+        while let innerOperation = findBasicSums(str) {
+            let result = flatCalculation(innerOperation)
+            str = str.replacingOccurrences(of: innerOperation, with: String(result))
+            print("\(innerOperation) = \(result) --->>", str)
+        }
+
+        return str
+    }
+
+    private func replaceBrackets(_ s: String) -> String {
+        var str = s
+
         while let innerOperation = findInnerCalculation(str) {
             let result = flatCalculation(innerOperation)
             str = str.replacingOccurrences(of: innerOperation, with: String(result))
+            print("\(innerOperation) = \(result) --->>", str)
+
+            str = replaceSums(str)
         }
 
-        return flatCalculation(str)
+        return str
     }
 
     private func findInnerCalculation(_ s: String) -> String? {
         let range = NSRange(location: 0, length: s.count)
         let innerRegex = try! NSRegularExpression(pattern: "\\([^\\(\\)]*\\)")
+
+        if let match = innerRegex.firstMatch(in: s, options: [], range: range) {
+            return String(s[Range(match.range, in: s)!])
+        }
+
+        return nil
+    }
+
+    private func findBasicSums(_ s: String) -> String? {
+        let range = NSRange(location: 0, length: s.count)
+        let innerRegex = try! NSRegularExpression(pattern: "\\d+\\s\\+\\s\\d+")
 
         if let match = innerRegex.firstMatch(in: s, options: [], range: range) {
             return String(s[Range(match.range, in: s)!])
