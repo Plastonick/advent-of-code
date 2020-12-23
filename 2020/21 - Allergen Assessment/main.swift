@@ -44,8 +44,6 @@ while modification {
             unconfirmedAllergens = remove(ingr: allergenicIngredient, from: unconfirmedAllergens)
         }
     }
-
-    print(modification)
 }
 
 print(confirmedAllergens)
