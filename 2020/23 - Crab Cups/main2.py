@@ -13,18 +13,15 @@ class RingBuffer:
         self.data = data
         self.size = len(data)
 
-    def shift_three(self, from_idx, to_idx, direction=1):
+    def shift_three(self, from_idx, to_idx, direction):
         from_idx = from_idx % self.size
         to_idx = to_idx % self.size
-
-        direction = 1
 
         idx = to_idx
 
         while True:
             target_idx = (idx + (3 * direction)) % self.size
-            if self.data[idx] is not None:
-                self.data[target_idx] = self.data[idx]
+            self.data[target_idx] = self.data[idx]
 
             if idx == from_idx:
                 break
@@ -53,7 +50,7 @@ class RingBuffer:
         self.data[idx] = value
 
 
-part_a = True
+part_a = False
 
 if part_a:
     debug = True
@@ -63,7 +60,7 @@ else:
     debug = False
     cups = RingBuffer([2, 8, 4, 5, 7, 3, 9, 6, 1] + [*range(10, 1_000_001)])
     goes = 10_000_000
-    goes = 1000
+    # goes = 1000
 
 num_cups = cups.size
 
@@ -82,17 +79,11 @@ def get_next_value(current, maximum, exclude):
 
 
 # s => starting index, d => destination index, m => maximum cup number
-def iterator_step(s, d, m):
+def should_move_forward(s, d, m):
     if d > s:
-        if d - s < m / 2:
-            return 1
-        else:
-            return -1
+        return d - s < m / 2
     else:
-        if s - d > m / 2:
-            return 1
-        else:
-            return -1
+        return s - d > m / 2
 
 
 picking_up_time = 0
@@ -136,12 +127,20 @@ for i in range(0, goes):
     # this is equivalent to either moving everything after the destination cup along three
     # OR moving the destination cup and everything before that back three spaces
     # in both cases, stopping at the three empty places the picked up cups used to inhabit
-    cups.shift_three(destination_cup_index + 1, current_index, -1)
+    if should_move_forward(destination_cup_index, current_index, cups.size):
+        cups.shift_three(destination_cup_index + 1, current_index, 1)
 
-    idx = destination_cup_index
-    for cup in picked_up:
-        idx = (idx + 1) % num_cups
-        cups.set(idx, cup)
+        idx = destination_cup_index
+        for cup in picked_up:
+            idx = (idx + 1) % num_cups
+            cups.set(idx, cup)
+    else:
+        cups.shift_three(destination_cup_index, current_index + 4, -1)
+
+        idx = destination_cup_index - 3
+        for cup in picked_up:
+            idx = (idx + 1) % num_cups
+            cups.set(idx, cup)
 
     # first = cups[:destination_cup_index + 1]
     # second = cups[destination_cup_index + 1:]
