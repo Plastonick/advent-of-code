@@ -1,71 +1,16 @@
-# cups = list(range(1, num_cups))
-
-# print(*range(1, 10))
-# exit()
-
-import time
-
-arr = [1, 2, 3, 4, 5, 6]
-
-
-class RingBuffer:
-    def __init__(self, data):
-        self.data = data
-        self.size = len(data)
-
-    def shift_three(self, from_idx, to_idx, direction):
-        from_idx = from_idx % self.size
-        to_idx = to_idx % self.size
-
-        idx = to_idx
-
-        while True:
-            target_idx = (idx + (3 * direction)) % self.size
-            self.data[target_idx] = self.data[idx]
-
-            if idx == from_idx:
-                break
-
-            idx = (idx - direction) % self.size
-
-    def get(self, idx):
-        return self.data[idx]
-
-    def pop_range(self, from_idx, to_idx):
-        idx = from_idx % self.size
-        to_idx = to_idx % self.size
-        ret = []
-        while idx != to_idx:
-            ret.append(self.data[idx])
-            self.data[idx] = None
-
-            idx = (idx + 1) % self.size
-
-        return ret
-
-    def index_of(self, val):
-        return self.data.index(val)
-
-    def set(self, idx, value):
-        self.data[idx] = value
-
+# import time
 
 part_a = False
 
 if part_a:
     debug = True
-    cups = RingBuffer([2, 8, 4, 5, 7, 3, 9, 6, 1])
+    cups = [2, 8, 4, 5, 7, 3, 9, 6, 1]
     goes = 100
 else:
     debug = False
-    cups = RingBuffer([2, 8, 4, 5, 7, 3, 9, 6, 1] + [*range(10, 1_000_001)])
+    cups = [2, 8, 4, 5, 7, 3, 9, 6, 1] + [n for n in range(10, 1_000_001)]
     goes = 10_000_000
-    # goes = 1000
-
-num_cups = cups.size
-
-current_index = 0
-
+    # goes = 100
 
 def get_next_value(current, maximum, exclude):
     next_value = current - 1
@@ -78,100 +23,40 @@ def get_next_value(current, maximum, exclude):
         return get_next_value(maximum + 1, maximum, exclude)
 
 
-# s => starting index, d => destination index, m => maximum cup number
-def should_move_forward(s, d, m):
-    if d > s:
-        return d - s < m / 2
-    else:
-        return s - d > m / 2
+successors = {}
+max_cup = max(cups)
+last_cup = max_cup
+for idx in range(len(cups)):
+    this_cup = cups[idx]
+    prev_cup = cups[idx - 1]
+
+    successors[prev_cup] = this_cup
 
 
-picking_up_time = 0
-finding_destination_time = 0
-modifying_time = 0
-modifying_time2 = 0
-modifying_time3 = 0
+current_cup = cups[0]
 
-for i in range(0, goes):
-    if i % 100 == 0:
-        print(i / 10000000)
+for _ in range(goes):
+    cup1 = successors[current_cup]
+    cup2 = successors[cup1]
+    cup3 = successors[cup2]
 
-    current_val = cups.get(current_index)
-    if debug:
-        print("current cup =>", current_val)
-        print(cups.data)
+    picked_up = [cup1, cup2, cup3]
 
-    # select the picked up cups, and replace their current position with "None"
-    start = time.perf_counter_ns()
+    destination_value = get_next_value(current_cup, max_cup, picked_up)
 
-    picked_up = cups.pop_range(current_index + 1, current_index + 4)
+    currently_after_destination = successors[destination_value]
+    currently_after_cup3 = successors[cup3]
 
-    picking_up_time += time.perf_counter_ns() - start
+    # tell the successors list that cup1 comes after the destination value
+    # and what was previously after the destination value, now comes after cup 3
+    # cup 2 implicitly remains between cups 1 and 3
+    successors[current_cup] = currently_after_cup3
+    successors[destination_value] = cup1
+    successors[cup3] = currently_after_destination
 
-    if debug:
-        print("pick up", picked_up)
-        print(cups.data)
+    current_cup = currently_after_cup3
 
-    start = time.perf_counter_ns()
-    destination_cup_val = get_next_value(current_val, num_cups, picked_up)
+after_1 = successors[1]
+after_after_1 = successors[after_1]
 
-    if debug:
-        print("destination cup =>", destination_cup_val)
-
-    destination_cup_index = cups.index_of(destination_cup_val)
-    finding_destination_time += time.perf_counter_ns() - start
-
-    start = time.perf_counter_ns()
-
-    # we now need to move our three picked up cups _after_ the destination cup.
-    # this is equivalent to either moving everything after the destination cup along three
-    # OR moving the destination cup and everything before that back three spaces
-    # in both cases, stopping at the three empty places the picked up cups used to inhabit
-    if should_move_forward(destination_cup_index, current_index, cups.size):
-        cups.shift_three(destination_cup_index + 1, current_index, 1)
-
-        idx = destination_cup_index
-        for cup in picked_up:
-            idx = (idx + 1) % num_cups
-            cups.set(idx, cup)
-    else:
-        cups.shift_three(destination_cup_index, current_index + 4, -1)
-
-        idx = destination_cup_index - 3
-        for cup in picked_up:
-            idx = (idx + 1) % num_cups
-            cups.set(idx, cup)
-
-    # first = cups[:destination_cup_index + 1]
-    # second = cups[destination_cup_index + 1:]
-    modifying_time += time.perf_counter_ns() - start
-
-    start = time.perf_counter_ns()
-    # if debug:
-    #     print(first)
-    #     print(second)
-    #
-    # cups = first + picked_up + second
-    modifying_time2 += time.perf_counter_ns() - start
-    start = time.perf_counter_ns()
-
-    current_index = (cups.index_of(current_val) + 1) % num_cups
-
-    modifying_time3 += time.perf_counter_ns() - start
-
-    if debug:
-        print()
-
-print("picking_up_time", round(picking_up_time / 1_000_000), "milliseconds")
-print("finding_destination_time", round(finding_destination_time / 1_000_000), "milliseconds")
-print("modifying_time", round(modifying_time / 1_000_000), "milliseconds")
-print("modifying_time2", round(modifying_time2 / 1_000_000), "milliseconds")
-print("modifying_time3", round(modifying_time3 / 1_000_000), "milliseconds")
-
-if part_a:
-    print(cups.data)
-else:
-    cup_1_pos = cups.index_of(1)
-
-    print(cups.get((cup_1_pos + 1) % cups.size))
-    print(cups.get((cup_1_pos + 2) % cups.size))
+print(after_1 * after_after_1)
