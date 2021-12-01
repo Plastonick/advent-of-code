@@ -12,6 +12,7 @@ else:
     goes = 10_000_000
     # goes = 100
 
+
 def get_next_value(current, maximum, exclude):
     next_value = current - 1
 
@@ -31,7 +32,6 @@ for idx in range(len(cups)):
     prev_cup = cups[idx - 1]
 
     successors[prev_cup] = this_cup
-
 
 current_cup = cups[0]
 
