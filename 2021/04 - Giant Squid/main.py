@@ -1,8 +1,6 @@
 import numpy as np
 from typing import List
 
-numbers = [int(n) for n in np.genfromtxt("./numbers", delimiter=",")]
-
 
 def boards_from_file(f):
     ret = []
@@ -13,7 +11,7 @@ def boards_from_file(f):
                 ret.append(curr)
             curr = []
         else:
-            curr.append([int(n) for n in line.split(" ")])
+            curr.append([int(n) + 1 for n in line.split(" ")])
 
     return ret
 
@@ -33,9 +31,13 @@ def is_complete(b):
 def board_score(b, n):
     total = 0
     for r in b:
-        total += sum(r)
+        for el in r:
+            if el != 0:
+                total += (el - 1)
     return total * n
 
+
+numbers = [int(n) + 1 for n in np.genfromtxt("./numbers", delimiter=",")]
 
 with open("./input") as file:
     boards = boards_from_file(file)
@@ -46,5 +48,7 @@ for num in numbers:
             board[i] = [0 if n == num else n for n in board[i]]
 
         if is_complete(board):
-            print(board_score(board, num))
-            exit()
+            print("score", board_score(board, num - 1))
+
+    # remove any boards that have been completed
+    boards = [b for b in boards if not is_complete(b)]
