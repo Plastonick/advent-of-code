@@ -1,8 +1,7 @@
 import numpy as np
-from typing import Dict
 
 
-def build_fish_ages(d) -> Dict[int, int]:
+def build_fish_ages(d) -> dict[int, int]:
     ret = {}
     for age in d:
         if age not in ret:
@@ -13,7 +12,7 @@ def build_fish_ages(d) -> Dict[int, int]:
     return ret
 
 
-def iterate_ages(ages, days) -> Dict[int, int]:
+def iterate_ages(ages, days) -> dict[int, int]:
     new_ages = {}
     for age in range(9):
         if age not in ages:
