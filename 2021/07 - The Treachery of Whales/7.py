@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+
 def cost_to_move_linearly(crabs, position) -> int:
     return abs(crabs - position).sum()
 
