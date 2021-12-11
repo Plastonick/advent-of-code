@@ -1,6 +1,16 @@
 import numpy as np
 
 
+def yield_next_vector():
+    # straight up
+    c = (1, 0)
+
+    while True:
+        yield c
+
+        # increment c
+
+
 def yield_intermediate_points(s, t):
     v = (s[0] - t[0], s[1] - t[1])
 
