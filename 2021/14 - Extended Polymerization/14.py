@@ -55,7 +55,6 @@ def count_chars(rule_counts: dict[str, int], d: str) -> dict[str, int]:
 with open('input') as f:
     for line in f.read().strip().split("\n"):
         pair, insertion = line.strip().split(" -> ")
-        # _rules[pair] = pair[0] + insertion.lower() + pair[1]
 
         match1 = pair[0] + insertion
         match2 = insertion + pair[1]
