@@ -3,12 +3,16 @@ from scipy.sparse import csr_matrix
 from scipy.sparse.csgraph import dijkstra
 from scipy.sparse.csgraph import shortest_path
 
+from pathfinding.core.diagonal_movement import DiagonalMovement
+from pathfinding.core.grid import Grid
+from pathfinding.finder.a_star import AStarFinder
 
-def iterate_template(template: np.ndarray, times):
+
+def iterate_template(template, times):
     return (template + times - 1) % 9 + 1
 
 
-def expand_path(template: np.ndarray, times=4):
+def expand_path(template, times=4):
     ret = template.copy()
 
     for i in range(times):
@@ -22,7 +26,7 @@ def expand_path(template: np.ndarray, times=4):
     return ret
 
 
-def to_dijkstra_matrix(path: np.ndarray) -> np.ndarray:
+def to_dijkstra_matrix(path):
     dim = len(path)
     ret = np.zeros((dim ** 2, dim ** 2))
 
@@ -56,12 +60,33 @@ with open('input') as f:
 path = np.asarray(path)
 
 # for part 2
-# path = expand_path(path)
+path = expand_path(path)
 
 path_dim = len(path)
-mat = to_dijkstra_matrix(path)
 
-graph = csr_matrix(mat)
-dist_matrix = shortest_path(csgraph=graph, directed=True, indices=0)
+if True:
+    grid = Grid(matrix=path)
+    start = grid.node(0, 0)
+    end = grid.node(path_dim - 1, path_dim - 1)
 
-print("part1", dist_matrix[path_dim ** 2 - 1])
+    finder = AStarFinder(diagonal_movement=DiagonalMovement.never, weight=0)
+    short_path, runs = finder.find_path(start, end, grid)
+
+    # print('operations:', runs, 'path length:', len(short_path))
+    # print(grid.grid_str(path=short_path, start=start, end=end))
+
+    total = -path[0][0]
+    for p in short_path:
+        cost = path[p[1]][p[0]]
+        total += cost
+
+    print(total)
+
+    a = 1
+else:
+    mat = to_dijkstra_matrix(path)
+
+    graph = csr_matrix(mat)
+    dist_matrix = shortest_path(csgraph=graph, directed=True, indices=0)
+
+    print("part1", dist_matrix[path_dim ** 2 - 1])
