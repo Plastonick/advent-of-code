@@ -16,11 +16,11 @@ def x_pos(initial_x: int, vx: int, steps: int) -> int:
     return pos
 
 
-target_x = range(102, 157)
-target_y = range(-146, -90)
+target_x = range(102, 158)
+target_y = range(-146, -89)
 
 valid = set()
-for x in range(14, 158):
+for x in range(14, 159):
     for y in range(-146, 147):
         i = 0
         y_after_i_steps = y_pos(0, y, i)
