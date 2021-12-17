@@ -50,13 +50,13 @@ while i < len(binary_str) - 6:
 
         if packet_data[0] is None:
             if i >= packet_data[1]:
-                print(")")
+                # print(")")
                 num_right += 1
             else:
                 packets_stack.append(packet_data)
         else:
             if packet_data[0] - 1 == 0:
-                print(")")
+                # print(")")
                 num_right += 1
             else:
                 packets_stack.append((packet_data[0] - 1, None))
@@ -73,15 +73,15 @@ while i < len(binary_str) - 6:
 
         value += binary_str[i + 1: i + 5]
 
-        print(int(value, 2))
+        # print(int(value, 2))
         # finished reading the packet, increment i
         i = i + 5
     else:
-        print("(")
+        # print("(")
         num_left += 1
         depth += 1
 
-        print(operations[type])
+        # print(operations[type])
 
         length_type = int(binary_str[i], 2)
         i = i + 1
@@ -91,13 +91,13 @@ while i < len(binary_str) - 6:
             packets_stack.append((None, i + total_length))
             i = i + 15
         else:
-            num_packets = int(binary_str[i:i + 15], 2)
+            num_packets = int(binary_str[i:i + 11], 2)
             packets_stack.append((num_packets, None))
             i = i + 11
 
     # a = 1
 
-for _ in range(num_left - num_right):
-    print(")")
+# for _ in range(num_left - num_right):
+#     # print(")")
 
 print(version_total)
