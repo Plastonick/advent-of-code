@@ -7,17 +7,20 @@ def combine_numbers(a: str, b: str) -> str:
     return f"[{a},{b}]"
 
 
-def find_deep_nested_bracket(expression: str) -> Optional[tuple[int, int]]:
+def find_deep_nested_bracket(expression: str) -> Optional[tuple[int, int, int]]:
     depth = 0
     last_opening_bracket = 0
+    last_comma = 0
     for i in range(len(expression)):
         if expression[i] == "[":
             last_opening_bracket = i
             depth += 1
         elif expression[i] == "]":
             if depth > 4:
-                return last_opening_bracket, i
+                return last_opening_bracket, last_comma, i
             depth -= 1
+        elif expression[i] == ",":
+            last_comma = i
 
     return None
 
@@ -27,12 +30,13 @@ def try_explode(expression: str) -> str:
     if position is None:
         return expression
 
-    left, right = position
+    left, comma, right = position
 
     # grab the values and then remove the nested expression
-    lv = int(expression[left + 1])
-    rv = int(expression[right - 1])
+    lv = int(expression[left+1:comma])
+    rv = int(expression[comma+1:right])
 
+    orig = expression
     expression = expression[:left] + "0" + expression[right + 1:]
     right = left + 1
 
@@ -80,12 +84,14 @@ def sum_snail_numbers(a: str, b: str) -> str:
     while True:
         before = expr
         expr = try_explode(expr)
+        if before != expr:
+            # allow trying another explosion
+            continue
+
+        expr = try_split(expr)
         if before == expr:
-            # we've not changed, try splitting
-            expr = try_split(expr)
-            if before == expr:
-                # we've not exploded or split, we've reached a stable point
-                break
+            # we've not exploded or split, we've reached a stable point
+            break
 
     return expr
 
@@ -94,7 +100,25 @@ def calculate_magnitude(expression: str) -> int:
     return len(expression)
 
 
-with open("example") as f:
+explode_tests = [
+    ('[[[[[13,11],1],2],3],4]', '[[[[0,12],2],3],4]'),
+    ('[[[[[9,8],1],2],3],4]', '[[[[0,9],2],3],4]'),
+    ('[7,[6,[5,[4,[3,2]]]]]', '[7,[6,[5,[7,0]]]]'),
+    ('[[6,[5,[4,[3,2]]]],1]', '[[6,[5,[7,0]]],3]'),
+    ('[[6,[5,[14,[3,2]]]],13]', '[[6,[5,[17,0]]],15]'),
+    ('[[3,[2,[1,[7,3]]]],[6,[5,[4,[3,2]]]]]', '[[3,[2,[8,0]]],[9,[5,[4,[3,2]]]]]'),
+    ('[[3,[2,[8,0]]],[9,[5,[4,[3,2]]]]]', '[[3,[2,[8,0]]],[9,[5,[7,0]]]]'),
+]
+
+for val, expected in explode_tests:
+    actual = try_explode(val)
+    if actual != expected:
+        print("Failed to correctly explode value!", val, "expected", expected, "actual", actual)
+        exit()
+
+print("Explode tests passed")
+
+with open("example2") as f:
     running_sum = None
     for line in f.read().strip().split("\n"):
         if running_sum is not None:
