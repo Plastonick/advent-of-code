@@ -33,47 +33,40 @@ def try_explode(expression: str) -> str:
     left, comma, right = position
 
     # grab the values and then remove the nested expression
-    lv = int(expression[left+1:comma])
-    rv = int(expression[comma+1:right])
+    lv = int(expression[left + 1:comma])
+    rv = int(expression[comma + 1:right])
 
-    orig = expression
     expression = expression[:left] + "0" + expression[right + 1:]
-    right = left + 1
 
-    left_pointer = left - 1
-    while left_pointer >= 0:
-        if expression[left_pointer] in '1234567890':
-            left_num = int(expression[left_pointer]) + lv
-            if left_num >= 10:
-                # everything will have shifted to the right...
-                right += 1
+    matches = re.search(r"(\d+)[^\d]*$", expression[:left])
+    if matches is not None:
+        left_num = int(matches[1]) + lv
 
-            expression = expression[:left_pointer] + str(left_num) + expression[left_pointer + 1:]
-            break
-        left_pointer -= 1
+        expression = expression[:matches.start()] + str(left_num) + expression[matches.start() + len(matches[1]):]
+        right = left + len(str(left_num))
+    else:
+        right = left + 1
 
-    right_pointer = right
-    while right_pointer < len(expression):
-        if expression[right_pointer] in '1234567890':
-            right_num = int(expression[right_pointer]) + rv
+    matches = re.search(r"(\d+)", expression[right:])
+    if matches is not None:
+        right_num = int(matches[1]) + rv
 
-            expression = expression[:right_pointer] + str(right_num) + expression[right_pointer + 1:]
-            break
-        right_pointer += 1
+        expression = expression[:matches.start() + right] + str(right_num) + expression[matches.end() + right:]
 
     return expression
 
 
 def try_split(expression: str) -> str:
-    matches = re.search(r"\d{2}", expression)
+    matches = re.search(r"(\d{2})", expression)
 
     if matches is None:
         return expression
     else:
-        val = int(matches.group())
+        val = int(matches[1])
         l, r = math.floor(val / 2), math.ceil(val / 2)
         replace = f"[{str(l)},{str(r)}]"
-        expression = expression.replace(matches.group(), replace)
+
+        expression = expression[:matches.start()] + replace + expression[matches.end():]
 
     return expression
 
@@ -82,6 +75,7 @@ def sum_snail_numbers(a: str, b: str) -> str:
     expr = combine_numbers(a, b)
 
     while True:
+        # print(expr)
         before = expr
         expr = try_explode(expr)
         if before != expr:
@@ -97,15 +91,28 @@ def sum_snail_numbers(a: str, b: str) -> str:
 
 
 def calculate_magnitude(expression: str) -> int:
-    return len(expression)
+    while True:
+        match = re.search(r"(\[\d+,\d+\])", expression)
+        if match is None:
+            break
+
+        digit_matches = [int(d) for d in re.findall(r"(\d+)", match[1])]
+        replace = (3 * digit_matches[0]) + (2 * digit_matches[1])
+
+        expression = expression[:match.start()] + str(replace) + expression[match.end():]
+
+    return int(expression)
 
 
 explode_tests = [
+    ('[[[[0,7],4],[7,[[8,4],9]]],[1,1]]', '[[[[0,7],4],[15,[0,13]]],[1,1]]'),
+    ('[[[[5,0],[[9,7],[9,6]]],[[4,[1,2]],[[1,4],2]]],[[[5,[2,8]],4],[5,[[9,9],0]]]]',
+     '[[[[5,9],[0,[16,6]]],[[4,[1,2]],[[1,4],2]]],[[[5,[2,8]],4],[5,[[9,9],0]]]]'),
+    ('[[6,[5,[14,[3,2]]]],13]', '[[6,[5,[17,0]]],15]'),
     ('[[[[[13,11],1],2],3],4]', '[[[[0,12],2],3],4]'),
     ('[[[[[9,8],1],2],3],4]', '[[[[0,9],2],3],4]'),
     ('[7,[6,[5,[4,[3,2]]]]]', '[7,[6,[5,[7,0]]]]'),
     ('[[6,[5,[4,[3,2]]]],1]', '[[6,[5,[7,0]]],3]'),
-    ('[[6,[5,[14,[3,2]]]],13]', '[[6,[5,[17,0]]],15]'),
     ('[[3,[2,[1,[7,3]]]],[6,[5,[4,[3,2]]]]]', '[[3,[2,[8,0]]],[9,[5,[4,[3,2]]]]]'),
     ('[[3,[2,[8,0]]],[9,[5,[4,[3,2]]]]]', '[[3,[2,[8,0]]],[9,[5,[7,0]]]]'),
 ]
@@ -113,17 +120,73 @@ explode_tests = [
 for val, expected in explode_tests:
     actual = try_explode(val)
     if actual != expected:
-        print("Failed to correctly explode value!", val, "expected", expected, "actual", actual)
+        print("Failed to correctly explode value!", val, "actual", actual, "expected", expected)
         exit()
 
 print("Explode tests passed")
 
-with open("example2") as f:
-    running_sum = None
-    for line in f.read().strip().split("\n"):
-        if running_sum is not None:
-            running_sum = sum_snail_numbers(running_sum, line)
-        else:
-            running_sum = line
+split_tests = [
+    ('[10,5]', '[[5,5],5]'),
+    ('[11,5]', '[[5,6],5]'),
+    ('[5,11]', '[5,[5,6]]'),
+    ('[11,11]', '[[5,6],11]'),
+]
 
-print(running_sum)
+for val, expected in split_tests:
+    actual = try_split(val)
+    if actual != expected:
+        print("Failed to correctly split value!", val, "expected", expected, "actual", actual)
+        exit()
+
+print("Split tests passed")
+
+sum_tests = [
+    ('[[[[4,3],4],4],[7,[[8,4],9]]]', '[1,1]', '[[[[0,7],4],[[7,8],[6,0]]],[8,1]]'),
+    ('[[[0,[4,5]],[0,0]],[[[4,5],[2,6]],[9,5]]]', '[7,[[[3,7],[4,3]],[[6,3],[8,8]]]]',
+     '[[[[4,0],[5,4]],[[7,7],[6,0]]],[[8,[7,7]],[[7,9],[5,0]]]]'),
+]
+
+for a, b, expected in sum_tests:
+    actual = sum_snail_numbers(a, b)
+    if actual != expected:
+        print(a)
+        print("+", b)
+        print("Failed to correctly sum values!", "expected", expected, "actual", actual)
+        exit()
+
+print("Sum tests passed")
+
+magnitude_tests = [
+    ('[[[[6,6],[7,6]],[[7,7],[7,0]]],[[[7,7],[7,7]],[[7,8],[9,9]]]]', 4140)
+]
+
+for expr, expected in magnitude_tests:
+    actual = calculate_magnitude(expr)
+    if actual != expected:
+        print("Failed to correctly calculate magnitude!", "actual", actual, "expected", expected)
+        exit()
+
+print("Magnitude tests passed")
+
+with open("input") as f:
+    lines = f.read().strip().split("\n")
+
+running_sum = None
+for line in lines:
+    if running_sum is not None:
+        running_sum = sum_snail_numbers(running_sum, line)
+    else:
+        running_sum = line
+
+print("part1", calculate_magnitude(running_sum))
+
+largest = 0
+for a in lines:
+    for b in lines:
+        if a == b:
+            continue
+
+        largest = max(largest, calculate_magnitude(sum_snail_numbers(a, b)))
+
+print("part2", largest)
+
