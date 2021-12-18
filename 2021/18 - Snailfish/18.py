@@ -75,7 +75,6 @@ def sum_snail_numbers(a: str, b: str) -> str:
     expr = combine_numbers(a, b)
 
     while True:
-        # print(expr)
         before = expr
         expr = try_explode(expr)
         if before != expr:
