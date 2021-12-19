@@ -127,7 +127,7 @@ def create_rotation_matrices():
     ]
 
 
-def create_rotational_key(relative_beacons: np.ndarray) -> set[tuple[int, int, int]]:
+def create_rotational_keys(relative_beacons: np.ndarray) -> set[tuple[int, int, int]]:
     vectors = set()
 
     for rotation in _rotations:
@@ -145,14 +145,14 @@ def create_rotational_key(relative_beacons: np.ndarray) -> set[tuple[int, int, i
 class Scanner:
     keys = None
 
-    def __init__(self, beacons: np.ndarray, offset: tuple[int, int, int]):
+    def __init__(self, beacons: np.ndarray, offset: tuple[int, int, int], keys):
         self.beacons = beacons
         self.offset = offset
+        if keys is None:
+            keys = create_rotational_keys(self.beacons)
+        self.keys = keys
 
     def get_keys(self):
-        if self.keys is None:
-            self.keys = create_rotational_key(self.beacons)
-
         return self.keys
 
     def rotate(self, n: int):
@@ -167,12 +167,12 @@ class Scanner:
 
         rotated_beacons = [np.matmul(rotation, b) for b in self.beacons]
 
-        return Scanner(beacons=rotated_beacons, offset=self.offset)
+        return Scanner(beacons=rotated_beacons, offset=self.offset, keys=self.keys)
 
     def translate(self, vector):
         translated = np.asarray([beacon + vector for beacon in self.beacons])
 
-        return Scanner(beacons=translated, offset=self.offset + vector)
+        return Scanner(beacons=translated, offset=self.offset + vector, keys=self.keys)
 
 
 def is_match(a: np.ndarray, b: np.ndarray) -> bool:
@@ -207,7 +207,7 @@ def find_match(fixed_scanners: list[Scanner], unknown_scanners: list[Scanner]):
     for i in range(len(unknown_scanners)):
         unknown = unknown_scanners[i]
         for fixed in fixed_scanners:
-            key_collisions = len(unknown.get_keys().intersection(fixed.get_keys()))
+            key_collisions = len(unknown.keys.intersection(fixed.keys))
 
             if key_collisions < 24 * 11 * 11:
                 continue
@@ -276,7 +276,7 @@ _scanners = []
 with open("input") as f:
     for scanner_str in re.sub(r"[^\n]*scan[^\n]*\n", "\n", f.read()).strip().split("\n\n"):
         scan_lines = np.asarray([line.split(",") for line in scanner_str.strip().split("\n")], dtype=int)
-        _scanners.append(Scanner(scan_lines, (0, 0, 0)))
+        _scanners.append(Scanner(scan_lines, (0, 0, 0), keys=None))
 
 _fixed_scanners = fix_scanners(_scanners)
 _fixed_beacons = retrieve_unique_beacons(_fixed_scanners)
