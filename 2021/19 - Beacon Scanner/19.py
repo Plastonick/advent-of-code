@@ -189,8 +189,7 @@ def attempt_match(a: Scanner, b: Scanner):
 
                 translated_b = np.asarray([bb + pd for bb in rotated.beacons])
                 if is_match(a.beacons, translated_b):
-                    rotated.translate(pd)
-                    return rotated
+                    return rotated.translate(pd)
 
     return None
 
@@ -204,7 +203,7 @@ def find_match(fixed_scanners: list[Scanner], unknown_scanners: list[Scanner]):
             if match is not None:
                 return match, i
 
-    return None
+    return None, None
 
 
 def retrieve_unique_beacons(scanners: list[Scanner]) -> set[tuple[int, int, int]]:
@@ -215,9 +214,10 @@ def retrieve_unique_beacons(scanners: list[Scanner]) -> set[tuple[int, int, int]
     return known_beacons
 
 
-def rotate_scanners(scanners: list[Scanner]):
-    fixed_scanners = [scanners[0]]
-    unknown_scanners = [scanners[i] for i in range(1, len(scanners))]
+def fix_scanners(scanners: list[Scanner]):
+    # assume scanner 0 is fixed
+    fixed_scanners = scanners[:1]
+    unknown_scanners = scanners[1:]
 
     while len(unknown_scanners) > 0:
         match, i = find_match(fixed_scanners, unknown_scanners)
@@ -241,7 +241,8 @@ with open("example") as f:
         scan_lines = np.asarray([line.split(",") for line in scanner_str.strip().split("\n")], dtype=int)
         _scanners.append(Scanner(scan_lines))
 
-_fixed_scanners = rotate_scanners(_scanners)
+_fixed_scanners = fix_scanners(_scanners)
 _fixed_beacons = retrieve_unique_beacons(_fixed_scanners)
 
+print(_fixed_beacons)
 print(len(_fixed_beacons))
