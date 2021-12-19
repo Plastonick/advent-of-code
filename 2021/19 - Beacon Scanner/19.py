@@ -128,23 +128,32 @@ def create_rotation_matrices():
 
 
 def create_rotational_key(relative_beacons: np.ndarray) -> set[tuple[int, int, int]]:
-    key = set()
+    vectors = set()
 
-    for a in relative_beacons:
-        for b in relative_beacons:
-            if np.array_equal(a, b):
-                continue
+    for rotation in _rotations:
+        for a in relative_beacons:
+            for b in relative_beacons:
+                if np.array_equal(a, b):
+                    continue
 
-            key_arr = [a[i] - b[i] for i in range(3)]
-            key.add(tuple(key_arr))
+                key_arr = np.matmul(rotation, [a[i] - b[i] for i in range(3)])
+                vectors.add(tuple(key_arr))
 
-    return key
+    return vectors
 
 
 class Scanner:
+    keys = None
+
     def __init__(self, beacons: np.ndarray):
         self.beacons = beacons
-        # self.keys = create_rotational_key(beacons)
+
+    def get_keys(self):
+        if self.keys is None:
+            self.keys = create_rotational_key(self.beacons)
+
+        return self.keys
+
 
     def rotate(self, n: int):
         """
@@ -198,6 +207,11 @@ def find_match(fixed_scanners: list[Scanner], unknown_scanners: list[Scanner]):
     for i in range(len(unknown_scanners)):
         unknown = unknown_scanners[i]
         for fixed in fixed_scanners:
+            key_collisions = len(unknown.get_keys().intersection(fixed.get_keys()))
+
+            if key_collisions < 24 * 11 * 11:
+                continue
+
             match = attempt_match(fixed, unknown)
 
             if match is not None:
@@ -236,7 +250,7 @@ def fix_scanners(scanners: list[Scanner]):
 _rotations = create_rotation_matrices()
 _scanners = []
 
-with open("example") as f:
+with open("input") as f:
     for scanner_str in re.sub(r"[^\n]*scan[^\n]*\n", "\n", f.read()).strip().split("\n\n"):
         scan_lines = np.asarray([line.split(",") for line in scanner_str.strip().split("\n")], dtype=int)
         _scanners.append(Scanner(scan_lines))
@@ -244,5 +258,4 @@ with open("example") as f:
 _fixed_scanners = fix_scanners(_scanners)
 _fixed_beacons = retrieve_unique_beacons(_fixed_scanners)
 
-print(_fixed_beacons)
 print(len(_fixed_beacons))
