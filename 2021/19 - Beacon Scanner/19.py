@@ -145,15 +145,15 @@ def create_rotational_key(relative_beacons: np.ndarray) -> set[tuple[int, int, i
 class Scanner:
     keys = None
 
-    def __init__(self, beacons: np.ndarray):
+    def __init__(self, beacons: np.ndarray, offset: tuple[int, int, int]):
         self.beacons = beacons
+        self.offset = offset
 
     def get_keys(self):
         if self.keys is None:
             self.keys = create_rotational_key(self.beacons)
 
         return self.keys
-
 
     def rotate(self, n: int):
         """
@@ -167,12 +167,12 @@ class Scanner:
 
         rotated_beacons = [np.matmul(rotation, b) for b in self.beacons]
 
-        return Scanner(beacons=rotated_beacons)
+        return Scanner(beacons=rotated_beacons, offset=self.offset)
 
     def translate(self, vector):
         translated = np.asarray([beacon + vector for beacon in self.beacons])
 
-        return Scanner(beacons=translated)
+        return Scanner(beacons=translated, offset=self.offset + vector)
 
 
 def is_match(a: np.ndarray, b: np.ndarray) -> bool:
@@ -247,15 +247,39 @@ def fix_scanners(scanners: list[Scanner]):
     return fixed_scanners
 
 
+def manhattan_distance(a: Scanner, b: Scanner) -> int:
+    dist = 0
+    for i in range(3):
+        dist += abs(a.offset[i] - b.offset[i])
+
+    return dist
+
+
+def get_max_manhattan(scanners: list[Scanner]) -> int:
+    largest = 0
+    for a_i in range(len(scanners)):
+        for b_i in range(len(scanners)):
+            if a_i == b_i:
+                continue
+
+            a = scanners[a_i]
+            b = scanners[b_i]
+
+            largest = max(largest, manhattan_distance(a, b))
+
+    return largest
+
+
 _rotations = create_rotation_matrices()
 _scanners = []
 
 with open("input") as f:
     for scanner_str in re.sub(r"[^\n]*scan[^\n]*\n", "\n", f.read()).strip().split("\n\n"):
         scan_lines = np.asarray([line.split(",") for line in scanner_str.strip().split("\n")], dtype=int)
-        _scanners.append(Scanner(scan_lines))
+        _scanners.append(Scanner(scan_lines, (0, 0, 0)))
 
 _fixed_scanners = fix_scanners(_scanners)
 _fixed_beacons = retrieve_unique_beacons(_fixed_scanners)
 
 print(len(_fixed_beacons))
+print(get_max_manhattan(_fixed_scanners))
