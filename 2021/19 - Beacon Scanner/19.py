@@ -281,5 +281,5 @@ with open("input") as f:
 _fixed_scanners = fix_scanners(_scanners)
 _fixed_beacons = retrieve_unique_beacons(_fixed_scanners)
 
-print(len(_fixed_beacons))
-print(get_max_manhattan(_fixed_scanners))
+print("part1", len(_fixed_beacons))
+print("part2", get_max_manhattan(_fixed_scanners))
