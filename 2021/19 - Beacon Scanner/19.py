@@ -207,6 +207,14 @@ def find_match(fixed_scanners: list[Scanner], unknown_scanners: list[Scanner]):
     return None
 
 
+def retrieve_unique_beacons(scanners: list[Scanner]) -> set[tuple[int, int, int]]:
+    known_beacons = set()
+    for scanner in scanners:
+        known_beacons = known_beacons.union(set([tuple(b) for b in scanner.beacons]))
+
+    return known_beacons
+
+
 def rotate_scanners(scanners: list[Scanner]):
     fixed_scanners = [scanners[0]]
     unknown_scanners = [scanners[i] for i in range(1, len(scanners))]
@@ -222,19 +230,18 @@ def rotate_scanners(scanners: list[Scanner]):
             fixed_scanners.append(match)
             del unknown_scanners[i]
 
-    known_beacons = set()
-    for scanner in fixed_scanners:
-        known_beacons = known_beacons.union(set([tuple(b) for b in scanner.beacons]))
-
-    print(len(known_beacons))
+    return fixed_scanners
 
 
 _rotations = create_rotation_matrices()
 _scanners = []
 
-with open("example2") as f:
+with open("example") as f:
     for scanner_str in re.sub(r"[^\n]*scan[^\n]*\n", "\n", f.read()).strip().split("\n\n"):
         scan_lines = np.asarray([line.split(",") for line in scanner_str.strip().split("\n")], dtype=int)
         _scanners.append(Scanner(scan_lines))
 
-rotate_scanners(_scanners)
+_fixed_scanners = rotate_scanners(_scanners)
+_fixed_beacons = retrieve_unique_beacons(_fixed_scanners)
+
+print(len(_fixed_beacons))
