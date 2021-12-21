@@ -1,4 +1,5 @@
 import sys
+from functools import cache
 
 
 class Die:
@@ -36,50 +37,45 @@ def build_dirac_frequency(choices: int, n_rolls: int, roll_frequency: dict[int, 
     new_roll_freq = {}
     for c in range(1, choices + 1):
         for r in roll_frequency:
+            a = r + c
+
             if r + c not in new_roll_freq:
                 new_roll_freq[r + c] = 0
 
-            new_roll_freq[r + c] = roll_frequency[r] + 1
+            new_roll_freq[r + c] += roll_frequency[r]
 
     return build_dirac_frequency(choices, n_rolls - 1, new_roll_freq)
 
 
-def dirac_turn(players: tuple[Player, Player], turn: int) -> tuple[int, int]:
+@cache
+def dirac_turn(players: tuple[tuple[int, int], tuple[int, int]], turn: int) -> tuple[int, int]:
     max_score = 21
 
-    if players[0].score >= max_score:
+    if players[0][0] >= max_score:
         return 1, 0
-    elif players[1].score >= max_score:
+    elif players[1][0] >= max_score:
         return 0, 1
 
     wins = [0, 0]
     p1 = players[0]
     p2 = players[1]
 
-    # how many ways there are of rolling each dice
-    freq = {
-        3: 1,
-        4: 3,
-        5: 6,
-        6: 7,
-        7: 6,
-        8: 3,
-        9: 1
-    }
-
-    for r in freq:
+    for r in _possibility_frequencies:
         # construct new players, find out how many time they win
-        new_p1 = Player(score=p1.score, position=p1.get_position())
-        new_p2 = Player(score=p2.score, position=p2.get_position())
+        new_p1 = Player(score=p1[0], position=p1[1])
+        new_p2 = Player(score=p2[0], position=p2[1])
 
         if turn == 0:
             new_p1.move(r)
         else:
             new_p2.move(r)
 
-        p1wins, p2wins = dirac_turn((new_p1, new_p2), (turn + 1) % 2)
-        wins[0] += p1wins * freq[r]
-        wins[1] += p2wins * freq[r]
+        p1wins, p2wins = dirac_turn(
+            ((new_p1.score, new_p1.get_position()), (new_p2.score, new_p2.get_position())),
+            (turn + 1) % 2
+            )
+        wins[0] += p1wins * _possibility_frequencies[r]
+        wins[1] += p2wins * _possibility_frequencies[r]
 
     return wins[0], wins[1]
 
@@ -109,14 +105,14 @@ while _players[0].score < 1000 and _players[1].score < 1000:
 
 print("part1", _players[_turn].score * number_of_rolls)
 
-print(build_dirac_frequency(3, 3, {0: 0}))
+_possibility_frequencies = build_dirac_frequency(3, 3, {0: 1})
 
 print(
     dirac_turn(
-        [
-            Player(score=0, position=player_1_starting),
-            Player(score=0, position=player_2_starting)
-        ],
+        (
+            (0, player_1_starting),
+            (0, player_2_starting)
+        ),
         0
     )
 )
