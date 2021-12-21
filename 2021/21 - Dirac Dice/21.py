@@ -56,6 +56,7 @@ def dirac_turn(players: tuple[Player, Player], turn: int) -> tuple[int, int]:
     p1 = players[0]
     p2 = players[1]
 
+    # how many ways there are of rolling each dice
     freq = {
         3: 1,
         4: 3,
@@ -68,8 +69,8 @@ def dirac_turn(players: tuple[Player, Player], turn: int) -> tuple[int, int]:
 
     for r in freq:
         # construct new players, find out how many time they win
-        new_p1 = Player(score=p1.score, position=p1.position)
-        new_p2 = Player(score=p2.score, position=p2.position)
+        new_p1 = Player(score=p1.score, position=p1.get_position())
+        new_p2 = Player(score=p2.score, position=p2.get_position())
 
         if turn == 0:
             new_p1.move(r)
