@@ -223,12 +223,6 @@ def iterate_moves(state: State):
     if state.is_complete():
         best_cost = state.cost
         print("best cost", best_cost)
-
-        if best_cost < 44169:
-            a = 1
-
-        state.print()
-        print()
         return
 
     potential_moves = state.enumerate_legal_moves()
