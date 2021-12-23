@@ -120,15 +120,6 @@ class State:
 
                 hall_min, hall_max = self.hall_free_min_max_around(pos[0])
 
-                # enumerate all the good hall positions
-                for i in range(hall_min, hall_max + 1):
-                    # can't stop outside a room
-                    if i in [2, 4, 6, 8]:
-                        continue
-
-                    # this is a legal move into the hallway, add it to our list
-                    moves.append((pos, (i, 0)))
-
                 # we also want to consider moving from a room directly into the target room
                 free_height = self.room_is_free_to_move(amphipod_type)
 
@@ -137,6 +128,16 @@ class State:
                         hall_max + 1
                 ):
                     moves.append((pos, (target_room, free_height)))
+                    continue
+
+                # enumerate all the good hall positions
+                for i in range(hall_min, hall_max + 1):
+                    # can't stop outside a room
+                    if i in [2, 4, 6, 8]:
+                        continue
+
+                    # this is a legal move into the hallway, add it to our list
+                    moves.append((pos, (i, 0)))
 
         # sort the moves by cost in ascending order, we'd rather do _cheaper_ moves first.
         # moves.sort(key=lambda x: self.move_cost(x[0], x[1]))
