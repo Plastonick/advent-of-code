@@ -4,9 +4,10 @@ sys.setrecursionlimit(100000000)
 
 
 class State:
-    def __init__(self, state: dict[tuple[int, int], str], cost: int):
+    def __init__(self, state: dict[tuple[int, int], str], cost: int, moves):
         self.state = state
         self.cost = cost
+        self.moves = moves
 
     def move(self, a, b):
         if not self.move_is_valid(a, b):
@@ -20,7 +21,10 @@ class State:
         del new_state[a]
         new_state[b] = amphipod_type
 
-        return State(new_state, self.cost + move_cost)
+        new_moves = self.moves.copy()
+        new_moves.append((a, b))
+
+        return State(new_state, self.cost + move_cost, new_moves)
 
     def lower_bound_cost(self):
         lower_bound = self.cost
@@ -61,7 +65,7 @@ class State:
         return True
 
     def is_complete(self):
-        if len(self.state) != 8:
+        if len(self.state) != depth * 4:
             print("Invalid state!")
             exit(1)
 
@@ -92,16 +96,27 @@ class State:
             # it's in a room, we either need to move right into the room, or to an appropriate hallway spot
             else:
                 # is it blocked? Ignore it and carry on.
-                if pos[1] == 2 and (pos[0], 1) in self.state:
+                if self.is_blocked_in_room(pos):
                     continue
 
                 # is its room already completed? Ignore it and carry on.
                 if self.room_is_complete(amphipod_type):
                     continue
 
-                # is it already at the bottom of it's room? Ignore it and carry on
-                if pos[0] == target_room and pos[1] == 2:
-                    continue
+                # is it and everything below it in the correct room?
+                if pos[0] == target_room:
+                    bottom = True
+                    for i in range(pos[1], depth + 1):
+                        if (pos[0], i) not in self.state:
+                            # it's halfway up its room? That's not right!
+                            print("It's halfway up its room? This should never happen!")
+                            exit()
+
+                        if self.state[(pos[0], i)] != amphipod_type:
+                            bottom = False
+                            break
+                    if bottom:
+                        continue
 
                 hall_min, hall_max = self.hall_free_min_max_around(pos[0])
 
@@ -120,13 +135,21 @@ class State:
                 if free_height is not None and target_room in range(hall_min, hall_max + 1) and pos[0] in range(
                         hall_min,
                         hall_max + 1
-                        ):
+                ):
                     moves.append((pos, (target_room, free_height)))
 
         # sort the moves by cost in ascending order, we'd rather do _cheaper_ moves first.
-        moves.sort(key=lambda x: self.move_cost(x[0], x[1]))
+        # moves.sort(key=lambda x: self.move_cost(x[0], x[1]))
 
         return moves
+
+    def is_blocked_in_room(self, a):
+        # is it blocked? Ignore it and carry on.
+        for i in range(1, a[1]):
+            if (a[0], i) in self.state:
+                return True
+
+        return False
 
     def hall_free_min_max_around(self, pivot):
         hallway_positions = [-1, 11]
@@ -153,7 +176,7 @@ class State:
     def room_is_complete(self, amphipod_type):
         amphipod_room = destinations[amphipod_type]
 
-        for i in [1, 2]:
+        for i in range(1, depth + 1):
             if (amphipod_room, i) not in self.state:
                 return False
             if self.state[(amphipod_room, i)] != amphipod_type:
@@ -164,22 +187,23 @@ class State:
     def room_is_free_to_move(self, amphipod_type):
         destination_room = destinations[amphipod_type]
 
-        # if the entry to the room is blocked, then can't move!
-        if (destination_room, 1) in self.state:
-            return None
+        # start at the back, return the first free space.
+        # stop immediately if we the room has a wrong type inside
+        for i in range(depth, 0, -1):
+            if (destination_room, i) not in self.state:
+                return i
 
-        # the back of the room is free, this room is good to go!
-        if (destination_room, 2) not in self.state:
-            return 2
-
-        # the back of the room is taken, but it's the right type, we can move to the entrance!
-        if self.state[(destination_room, 2)] == amphipod_type:
-            return 1
+            if self.state[(destination_room, i)] != amphipod_type:
+                return None
 
         return None
 
     def print(self):
-        arr = [["#" for _ in range(13)] for _ in range(5)]
+        height = 0
+        for pos in self.state:
+            height = max(height, pos[1])
+
+        arr = [["#" for _ in range(13)] for _ in range(height + 3)]
         for i in range(1, 12):
             arr[1][i] = "."
 
@@ -198,7 +222,13 @@ def iterate_moves(state: State):
 
     if state.is_complete():
         best_cost = state.cost
-        print("Found new best cost", best_cost)
+        print("best cost", best_cost)
+
+        if best_cost < 44169:
+            a = 1
+
+        state.print()
+        print()
         return
 
     potential_moves = state.enumerate_legal_moves()
@@ -223,37 +253,62 @@ destinations = {
     "D": 8,
 }
 
-if len(sys.argv) >= 2 and sys.argv[1] == 'example':
-    starting_state = State(
-        state={
-            (2, 1): "B",
-            (2, 2): "A",
-            (4, 1): "C",
-            (4, 2): "D",
-            (6, 1): "B",
-            (6, 2): "C",
-            (8, 1): "D",
-            (8, 2): "A",
-        }, cost=0
-    )
-    print("expected", 12521)
-else:
-    starting_state = State(
-        state={
-            (2, 1): "B",
-            (2, 2): "B",
-            (4, 1): "C",
-            (4, 2): "C",
-            (6, 1): "A",
-            (6, 2): "D",
-            (8, 1): "D",
-            (8, 2): "A",
-        }, cost=0
-    )
+part1 = False
 
+if len(sys.argv) >= 2 and sys.argv[1] == 'example':
+    starting_state_config = {
+        (2, 1): "B",
+        (2, 2): "A",
+        (4, 1): "C",
+        (4, 2): "D",
+        (6, 1): "B",
+        (6, 2): "C",
+        (8, 1): "D",
+        (8, 2): "A",
+    }
+    if part1:
+        print("expected", 12521)
+    else:
+        print("expected", 44169)
+else:
+    starting_state_config = {
+        (2, 1): "B",
+        (2, 2): "B",
+        (4, 1): "C",
+        (4, 2): "C",
+        (6, 1): "A",
+        (6, 2): "D",
+        (8, 1): "D",
+        (8, 2): "A",
+    }
+
+part2_config = {
+    (2, 2): "D",
+    (2, 3): "D",
+    (4, 2): "C",
+    (4, 3): "B",
+    (6, 2): "B",
+    (6, 3): "A",
+    (8, 2): "A",
+    (8, 3): "C",
+}
+
+if not part1:
+    for j in [2, 4, 6, 8]:
+        starting_state_config[(j, 4)] = starting_state_config[(j, 2)]
+        del starting_state_config[(j, 2)]
+
+        starting_state_config[(j, 2)] = part2_config[(j, 2)]
+        starting_state_config[(j, 3)] = part2_config[(j, 3)]
+    depth = 4
+else:
+    depth = 2
+
+starting_state = State(state=starting_state_config, cost=0, moves=[])
 best_cost = 9999999999999
 
-starting_state.print()
+
+# exit()
 
 # oh, this is branch and bound!
 iterate_moves(state=starting_state)
