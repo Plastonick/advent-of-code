@@ -1,5 +1,4 @@
 import fileinput
-from functools import cache
 
 # by inspection, there are 14 modulo operations, and none of them does anything! The result of the modulo operations
 # are not considered before the value is then compared (eq) to both w and 0. Comparing a value to anything and then 0
@@ -31,9 +30,8 @@ for line in fileinput.input():
 _grouped_ops.append(_group)
 
 
-@cache
-def process_group(w, x, y, z, group_index):
-    memory = [w, x, y, z]
+def process_group(w, z, group_index):
+    memory = [w, 0, 0, z]
     operations = _grouped_ops[group_index]
 
     for op, left, right in operations:
@@ -72,7 +70,6 @@ def process_group(w, x, y, z, group_index):
 # the only real missing link is, "what range do I need to consider for any given expected output"?
 
 # valid_range = {14: {1: [0], 2: [0], 3: [0], 4: [0], 5: [0], 6: [0], 7: [0], 8: [0], 9: [0]}}
-# # valid_range = {13: {1: [14], 2: [15], 3: [16], 4: [17], 5: [18], 6: [19], 7: [20], 8: [21], 9: [22]}}
 #
 # print(list(range(13, -1, -1)))
 #
@@ -80,7 +77,8 @@ def process_group(w, x, y, z, group_index):
 #     a = 1
 #     for w in valid_range[ind + 1]:
 #         valid_z = valid_range[ind + 1][w]
-#         z_range = (max(valid_z) + 1) * 50
+#         # how to give the most sensible possible range for z? The below isn't even _sufficient_
+#         z_range = (max(valid_z) + 1) * 53
 #         for z in range(-z_range, z_range):
 #             x, y, z_out = process_group(w, 0, 0, z, ind)
 #             if x is None:
@@ -119,7 +117,7 @@ for i in range(len(_grouped_ops)):
             numbers = states[z]
             max_n = max(numbers)
             min_n = min(numbers)
-            _, _, new_z = process_group(j, 0, 0, z, i)
+            _, _, new_z = process_group(j, z, i)
 
             if new_z not in new_states:
                 new_states[new_z] = []
