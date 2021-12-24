@@ -1,20 +1,9 @@
 import fileinput
-import math
 from functools import cache
 
 # by inspection, there are 14 modulo operations, and none of them does anything! The result of the modulo operations
 # are not considered before the value is then compared (eq) to both w and 0. Comparing a value to anything and then 0
 # necessarily
-
-
-def yield_next_number() -> int:
-    start = 99999999999999
-    while start > 0:
-        yield start
-
-        start -= 1
-        while "0" in str(start):
-            start -= 1
 
 
 vars = {
@@ -79,37 +68,8 @@ def process_group(w, x, y, z, group_index):
     return memory[1], memory[2], memory[3]
 
 
-def process_all(number):
-    x, y, z = 0, 0, 0
-    power = int(math.log10(number))
-    for i in range(len(_grouped_ops)):
-        input_digit = int(number / (10 ** power))
-        number -= input_digit * (10 ** power)
-        power -= 1
-
-        print(input_digit)
-
-        x, y, z = process_group(input_digit, x, y, z, i)
-
-    return x, y, z
-
-
-def iterate_numbers():
-    i = 0
-    for num in yield_next_number():
-        x, y, z = process_all(num)
-        i += 1
-        if i % 100_000 == 0:
-            print(i)
-
-        if z == 0:
-            print(num, (x, y, z))
-            return
-
-
-print(process_all(13579246899999))
-
-# iterate_numbers()
+# the commented out below method tries a look-back solution to find a valid range for each given input
+# the only real missing link is, "what range do I need to consider for any given expected output"?
 
 # valid_range = {14: {1: [0], 2: [0], 3: [0], 4: [0], 5: [0], 6: [0], 7: [0], 8: [0], 9: [0]}}
 # # valid_range = {13: {1: [14], 2: [15], 3: [16], 4: [17], 5: [18], 6: [19], 7: [20], 8: [21], 9: [22]}}
@@ -117,8 +77,11 @@ print(process_all(13579246899999))
 # print(list(range(13, -1, -1)))
 #
 # for ind in range(13, -1, -1):
-#     for w in valid_range[ind + 1].keys():
-#         for z in range(-10000, 10000):
+#     a = 1
+#     for w in valid_range[ind + 1]:
+#         valid_z = valid_range[ind + 1][w]
+#         z_range = (max(valid_z) + 1) * 50
+#         for z in range(-z_range, z_range):
 #             x, y, z_out = process_group(w, 0, 0, z, ind)
 #             if x is None:
 #                 continue
@@ -131,7 +94,7 @@ print(process_all(13579246899999))
 #
 #                 valid_range[ind][w].append(z)
 #
-#     print(ind, valid_range[ind])
+#     print(ind)
 #     # break
 #
 # print(valid_range)
@@ -139,17 +102,24 @@ print(process_all(13579246899999))
 # need to find the range of (z,w) that must be given to the last group to => z = 0
 # then find the next range of values, and the next, etc.
 
-# def inverse_group(w, x, y, z, ind):
-#     group = _grouped_ops[ind]
-#
-#
-#
-#
-# x, y, z = 0, 0, 0
-# for ind in range(14):
-#     for w in range(1, 10):
-#         x, y, z = process_group(w, x, y, z, ind)
-#         if z not in range(-10000, 10000):
-#             continue
-#         else:
-#             print(ind, w)
+states = {0: [0]}
+for i in range(len(_grouped_ops)):
+    new_states = {}
+    for z in states:
+        for j in range(1, 10):
+            numbers = states[z]
+            max_n = max(numbers)
+            min_n = min(numbers)
+            _, _, new_z = process_group(j, 0, 0, z, i)
+
+            if new_z not in new_states:
+                new_states[new_z] = []
+
+            new_states[new_z].append((max_n * 10) + j)
+            new_states[new_z].append((min_n * 10) + j)
+
+    states = new_states
+    print(i, len(new_states))
+
+print("part1", max(states[0]))
+print("part2", min(states[0]))
