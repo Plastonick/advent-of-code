@@ -109,6 +109,9 @@ states = {0: [0]}
 # store those at each iteration. We have no real information for what's a good "z" value at any stage except the last
 # one, so we can't throw anything away. There was an attempted solution above that tried to find valid ranges of z at
 # each step, but this eventually failed.
+
+# this heavily abuses the fact that w, x, and y values are thrown away after each input, so we don't need to track their
+# state, we just need to consider all possible w (1-9) at each successive iteration.
 for i in range(len(_grouped_ops)):
     new_states = {}
     for z in states:
