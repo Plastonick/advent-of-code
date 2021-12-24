@@ -102,7 +102,13 @@ def process_group(w, x, y, z, group_index):
 # need to find the range of (z,w) that must be given to the last group to => z = 0
 # then find the next range of values, and the next, etc.
 
+# store the list of states (z values, that's all we care about) and the possible input values that can reach there.
 states = {0: [0]}
+
+# now, iterate through each group and update the state. In our case, we only care for the min and max value, so only
+# store those at each iteration. We have no real information for what's a good "z" value at any stage except the last
+# one, so we can't throw anything away. There was an attempted solution above that tried to find valid ranges of z at
+# each step, but this eventually failed.
 for i in range(len(_grouped_ops)):
     new_states = {}
     for z in states:
