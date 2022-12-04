@@ -8,24 +8,29 @@ mod common;
 #[command(author, version, about, long_about = None)]
 struct Args {
    /// Which day to run
-   #[arg(short, long)]
+   #[arg(short, long, default_value_t = 1)]
    day: u16,
 
-   /// Which part to run
-   #[arg(short, long, default_value_t = 1)]
-   part: u8,
+   /// Whether to run all days
+   #[arg(short, long, default_value_t = false)]
+   all: bool,
 }
 
 fn main() {
     let args = Args::parse();
 
-    common::get_lines("day04");
-
-    match args.day {
-        1 => days::day01::run(),
-        2 => days::day02::run(),
-        3 => days::day03::run(),
-        4 => days::day04::run(),
-        _ => println!("I haven't done this day yet ;(")
-    };
+    if args.all {
+        days::day01::run();
+        days::day02::run();
+        days::day03::run();
+        days::day04::run();
+    } else {
+        match args.day {
+            1 => days::day01::run(),
+            2 => days::day02::run(),
+            3 => days::day03::run(),
+            4 => days::day04::run(),
+            _ => println!("I haven't done this day yet ;(")
+        };
+    }
 }
