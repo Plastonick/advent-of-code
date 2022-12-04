@@ -1,0 +1,1 @@
+/Users/david/Developer/advent-of-code/rust2022/target/debug/rust2022: /Users/david/Developer/advent-of-code/rust2022/src/common.rs /Users/david/Developer/advent-of-code/rust2022/src/days/day03.rs /Users/david/Developer/advent-of-code/rust2022/src/days/day04.rs /Users/david/Developer/advent-of-code/rust2022/src/days/mod.rs /Users/david/Developer/advent-of-code/rust2022/src/main.rs
