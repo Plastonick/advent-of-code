@@ -36,13 +36,13 @@ pub fn run() {
             for value in shared_values {
                 group_sum += byte_priority(value);
             }
-            
+
             group_counter = 0;
         }
     }
 
-    println!("Part 1: Per-line shared items priority sum: {line_share_sum}");
-    println!("Part 2: Per-group of three shared items priority sum: {group_sum}");
+    println!("Day 3, Part 1: Per-line shared items priority sum: {line_share_sum}");
+    println!("Day 3, Part 2: Per-group of three shared items priority sum: {group_sum}");
 }
 
 fn byte_priority(byte: u8) -> u32 {

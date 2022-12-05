@@ -58,7 +58,7 @@ fn run_as_part(part: usize) {
     }
 
     println!(
-        "Part {}: the first box on each column spells: {}",
+        "Day 5, Part {}: the first box on each column spells: {}",
         part, answer
     );
 }

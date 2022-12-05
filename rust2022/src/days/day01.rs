@@ -1,6 +1,5 @@
 use crate::common::get_file_contents;
 
-
 pub fn run() {
     let input = get_file_contents("day01");
 
@@ -17,10 +16,10 @@ pub fn run() {
 
         all_totals.push(total_calories);
 
-        max = if total_calories > max { 
-            total_calories 
-        } else { 
-            max 
+        max = if total_calories > max {
+            total_calories
+        } else {
+            max
         };
     }
 
@@ -32,6 +31,6 @@ pub fn run() {
         .reduce(|x, y| x + y)
         .expect("Uh oh! Can't find calory sum of top three elves");
 
-    println!("Part 1: The elf with the largest number of calories has {max}");
-    println!("Part 2: The sum of the three most calorific elves is {sum_highest_three}");
+    println!("Day 1, Part 1: The elf with the largest number of calories has {max}");
+    println!("Day 1, Part 2: The sum of the three most calorific elves is {sum_highest_three}");
 }

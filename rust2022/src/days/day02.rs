@@ -15,8 +15,8 @@ pub fn run() {
         .reduce(|x, y| x + y)
         .expect("Uh oh! Couldn't score part 2");
 
-    println!("Part 1 scores {part_1_score}");
-    println!("Part 1 scores {part_2_score}");
+    println!("Day 2, Part 1: scores {part_1_score}");
+    println!("Day 2, Part 2: scores {part_2_score}");
 }
 
 fn score_part_1(line: &String) -> usize {
