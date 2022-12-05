@@ -1,12 +1,15 @@
 use crate::common::get_file_contents;
 
 pub fn run() {
+    run_as_part(1);
+    run_as_part(2);
+}
+
+fn run_as_part(part: usize) {
     let file = get_file_contents("day05");
 
     let parts = file.split("\n\n").take(2).collect::<Vec<&str>>();
     let [crates_pattern, commands] = <[&str; 2]>::try_from(parts).ok().unwrap();
-
-    println!("{}", crates_pattern);
 
     let num_columns = 9;
     let mut crates: Vec<Vec<char>> = Vec::new();
@@ -36,11 +39,16 @@ pub fn run() {
         let [_, num, _, from, _, to] = <[&str; 6]>::try_from(command_parts).ok().unwrap();
         let from_int: usize = from.parse().unwrap();
         let to_int: usize = to.parse().unwrap();
+        let num_int: usize = num.parse::<usize>().unwrap();
 
-        for _ in 0..num.parse::<usize>().unwrap() {
+        for i in 0..num_int {
             let removed = crates[from_int - 1].remove(0);
 
-            crates[to_int - 1].insert(0, removed)
+            if part == 1 {
+                crates[to_int - 1].insert(0, removed)
+            } else {
+                crates[to_int - 1].insert(i, removed)
+            }
         }
     }
 
@@ -49,5 +57,8 @@ pub fn run() {
         answer.push(crates[i][0]);
     }
 
-    println!("Part 1: the first box on each column spells: {}", answer);
+    println!(
+        "Part {}: the first box on each column spells: {}",
+        part, answer
+    );
 }
