@@ -24,12 +24,14 @@ fn main() {
         days::day02::run();
         days::day03::run();
         days::day04::run();
+        days::day05::run();
     } else {
         match args.day {
             1 => days::day01::run(),
             2 => days::day02::run(),
             3 => days::day03::run(),
             4 => days::day04::run(),
+            5 => days::day05::run(),
             _ => println!("I haven't done this day yet ;(")
         };
     }
