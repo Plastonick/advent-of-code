@@ -1,19 +1,19 @@
-use clap::{Parser, command};
+use clap::{command, Parser};
 
-mod days;
 mod common;
+mod days;
 
 /// Simple program to greet a person
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct Args {
-   /// Which day to run
-   #[arg(short, long, default_value_t = 1)]
-   day: u16,
+    /// Which day to run
+    #[arg(short, long, default_value_t = 1)]
+    day: u16,
 
-   /// Whether to run all days
-   #[arg(short, long, default_value_t = false)]
-   all: bool,
+    /// Whether to run all days
+    #[arg(short, long, default_value_t = false)]
+    all: bool,
 }
 
 fn main() {
@@ -25,6 +25,7 @@ fn main() {
         days::day03::run();
         days::day04::run();
         days::day05::run();
+        days::day06::run();
     } else {
         match args.day {
             1 => days::day01::run(),
@@ -32,7 +33,8 @@ fn main() {
             3 => days::day03::run(),
             4 => days::day04::run(),
             5 => days::day05::run(),
-            _ => println!("I haven't done this day yet ;(")
+            6 => days::day06::run(),
+            _ => println!("I haven't done this day yet ;("),
         };
     }
 }
