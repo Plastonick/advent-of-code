@@ -20,11 +20,11 @@ pub fn run() {
     }
 
     println!(
-        "Day 06, Part 1: The start of packet marker occurs at position {}",
+        "Day 6, Part 1: The start of packet marker occurs at position {}",
         start_of_packet
     );
     println!(
-        "Day 06, Part 2: The start of message marker occurs at position {}",
+        "Day 6, Part 2: The start of message marker occurs at position {}",
         start_of_message
     );
 }
