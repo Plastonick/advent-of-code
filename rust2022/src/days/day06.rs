@@ -5,32 +5,17 @@ use crate::common::get_file_contents;
 pub fn run() {
     let buffer = get_file_contents("day06");
 
-    let chars = buffer.chars();
-    let mut last_four: Vec<char> = Vec::new();
-    let mut last_fourteen: Vec<char> = Vec::new();
-    let mut counter = 0;
+    let bytes = buffer.as_bytes();
     let mut start_of_packet = 0;
     let mut start_of_message = 0;
 
-    for character in chars {
-        last_four.push(character);
-        last_fourteen.push(character);
-        counter += 1;
-
-        if last_four.len() > 4 {
-            last_four.remove(0);
+    for i in 0..bytes.len() - 13 {
+        if start_of_packet == 0 && are_unique(&bytes[i..i + 4]) {
+            start_of_packet = i + 4;
         }
 
-        if last_fourteen.len() > 14 {
-            last_fourteen.remove(0);
-        }
-
-        if last_four.len() == 4 && are_unique(&last_four) && start_of_packet == 0 {
-            start_of_packet = counter;
-        }
-
-        if last_fourteen.len() == 14 && are_unique(&last_fourteen) && start_of_message == 0 {
-            start_of_message = counter;
+        if start_of_message == 0 && are_unique(&bytes[i..i + 14]) {
+            start_of_message = i + 14;
         }
     }
 
@@ -44,8 +29,8 @@ pub fn run() {
     );
 }
 
-fn are_unique(characters: &Vec<char>) -> bool {
-    let set: HashSet<&char> = HashSet::from_iter(characters.into_iter());
+fn are_unique(characters: &[u8]) -> bool {
+    let set: HashSet<&u8> = HashSet::from_iter(characters.into_iter());
 
     set.len() == characters.len()
 }
