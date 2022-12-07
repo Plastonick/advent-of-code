@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{cmp::min, collections::HashMap};
 
 use crate::common::get_lines;
 
@@ -77,11 +77,36 @@ pub fn run() {
     }
 
     let total_disk_space = 70000000;
-    let disk_space_needed = 30000000;
+    let updgrade_disk_needed = 30000000;
+    let mut disk_space_used = 0;
+
+    for path in sizes.keys() {
+        if path.len() == 1 {
+            let path_size = size_at_path(path.clone(), sizes.clone());
+            disk_space_used += path_size;
+        }
+    }
+
+    let mut smallest_path = total_disk_space;
+
+    let disk_space_needed = updgrade_disk_needed - (total_disk_space - disk_space_used);
+
+    for path in sizes.keys() {
+        let path_size = size_at_path(path.clone(), sizes.clone());
+
+        if path_size > disk_space_needed {
+            smallest_path = min(smallest_path, path_size);
+        }
+    }
 
     println!(
         "Day 7, Part 1: The size of directories less than 100k is {}",
         part_1_sum
+    );
+
+    println!(
+        "Day 7, Part 2: The smallest path I can delete to free up enough room is {}",
+        smallest_path
     );
 }
 
