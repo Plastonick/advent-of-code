@@ -69,7 +69,7 @@ pub fn run() {
     let mut part_1_sum = 0;
 
     for path in sizes.keys() {
-        let path_size = size_at_path(path.clone(), sizes.clone());
+        let path_size = size_at_path(path.clone(), &sizes);
 
         if path_size <= part_1_limit {
             part_1_sum += path_size;
@@ -82,7 +82,7 @@ pub fn run() {
 
     for path in sizes.keys() {
         if path.len() == 1 {
-            let path_size = size_at_path(path.clone(), sizes.clone());
+            let path_size = size_at_path(path.clone(), &sizes);
             disk_space_used += path_size;
         }
     }
@@ -92,7 +92,7 @@ pub fn run() {
     let disk_space_needed = updgrade_disk_needed - (total_disk_space - disk_space_used);
 
     for path in sizes.keys() {
-        let path_size = size_at_path(path.clone(), sizes.clone());
+        let path_size = size_at_path(path.clone(), &sizes);
 
         if path_size > disk_space_needed {
             smallest_path = min(smallest_path, path_size);
@@ -114,13 +114,16 @@ fn is_command(line: &String) -> bool {
     line.as_bytes()[0] as char == '$'
 }
 
-fn size_at_path(dir: Vec<&str>, file_system: HashMap<Vec<&str>, (usize, Vec<Vec<&str>>)>) -> usize {
+fn size_at_path(
+    dir: Vec<&str>,
+    file_system: &HashMap<Vec<&str>, (usize, Vec<Vec<&str>>)>,
+) -> usize {
     let (size, subdirs) = file_system.get(&dir).expect("Can't find value of path");
 
     let mut total_size = size.to_owned();
 
     for subdir in subdirs.iter() {
-        total_size += size_at_path(subdir.clone(), file_system.clone());
+        total_size += size_at_path(subdir.clone(), file_system);
     }
 
     total_size
