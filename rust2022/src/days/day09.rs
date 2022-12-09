@@ -37,22 +37,41 @@ impl DistanceTo for Vector {
 pub fn run() {
     let lines = get_lines("day09");
 
-    let mut head = Vector { x: 0, y: 0 };
-    let mut tail = Vector { x: 0, y: 0 };
-    let mut tail_positions = HashSet::new();
+    let mut head_knot = Vector { x: 0, y: 0 };
+    let mut tail_knots = [Vector { x: 0, y: 0 }; 9];
+    let mut first_tail_positions = HashSet::new();
+    let mut last_tail_positions = HashSet::new();
+    let zero_vector = Vector { x: 0, y: 0 };
 
     for (direction, magnitude) in lines.iter().map(map_command) {
         for _ in 0..magnitude {
-            (head, tail) = move_head(head, tail, direction);
+            let (lead_knot, trailing_knot) = move_head(head_knot, tail_knots[0], direction);
+
+            head_knot = lead_knot;
+            tail_knots[0] = trailing_knot;
+
+            for i in 1..tail_knots.len() {
+                let (lead_knot, trailing_knot) =
+                    move_head(tail_knots[i - 1], tail_knots[i], zero_vector);
+
+                tail_knots[i - 1] = lead_knot;
+                tail_knots[i] = trailing_knot;
+            }
 
             // record tail position
-            tail_positions.insert(tail);
+            first_tail_positions.insert(tail_knots[0]);
+            last_tail_positions.insert(tail_knots[tail_knots.len() - 1]);
         }
     }
 
     println!(
-        "Day 9, Part 1: The tail visits {} unique position",
-        tail_positions.len()
+        "Day 9, Part 1: The first tail visits {} unique position",
+        first_tail_positions.len()
+    );
+
+    println!(
+        "Day 9, Part 2: The last tail (of 9) visits {} unique position",
+        last_tail_positions.len()
     )
 }
 
