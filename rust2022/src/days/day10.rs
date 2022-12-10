@@ -26,9 +26,9 @@ pub fn run(visual: bool) {
                 if register - (cycle - (40 * line_num)) <= 0
                     && register - (cycle - (40 * line_num)) >= -2
                 {
-                    print!("#");
+                    print!("█");
                 } else {
-                    print!(".");
+                    print!("░");
                 }
 
                 if cycle % 40 == 0 {
