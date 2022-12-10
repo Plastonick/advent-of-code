@@ -3,14 +3,15 @@ use std::cmp::max;
 use std::collections::HashSet;
 use std::hash::Hash;
 use std::ops::Add;
+use std::{thread, time};
 
 #[derive(PartialEq, Eq, Hash, Clone, Copy, Debug)]
-struct Vector {
+struct Point {
     x: isize,
     y: isize,
 }
 
-impl Add for Vector {
+impl Add for Point {
     type Output = Self;
 
     fn add(self, other: Self) -> Self {
@@ -22,28 +23,29 @@ impl Add for Vector {
 }
 
 trait DistanceTo {
-    fn distance_to(&self, target: Vector) -> Vector;
+    fn distance_to(&self, target: Point) -> Point;
 }
 
-impl DistanceTo for Vector {
-    fn distance_to(&self, target: Vector) -> Vector {
-        Vector {
+impl DistanceTo for Point {
+    fn distance_to(&self, target: Point) -> Point {
+        Point {
             x: self.x - target.x,
             y: self.y - target.y,
         }
     }
 }
 
-pub fn run() {
+pub fn run(visual: bool) {
     let lines = get_lines("day09");
 
-    let mut head_knot = Vector { x: 0, y: 0 };
-    let mut tail_knots = [Vector { x: 0, y: 0 }; 9];
+    let mut head_knot = Point { x: 0, y: 0 };
+    let mut tail_knots = [Point { x: 0, y: 0 }; 9];
     let mut first_tail_positions = HashSet::new();
     let mut last_tail_positions = HashSet::new();
-    let zero_vector = Vector { x: 0, y: 0 };
+    let zero_vector = Point { x: 0, y: 0 };
+    let commands = lines.iter().map(map_command);
 
-    for (direction, magnitude) in lines.iter().map(map_command) {
+    for (direction, magnitude) in commands {
         for _ in 0..magnitude {
             let (lead_knot, trailing_knot) = move_head(head_knot, tail_knots[0], direction);
 
@@ -56,6 +58,10 @@ pub fn run() {
 
                 tail_knots[i - 1] = lead_knot;
                 tail_knots[i] = trailing_knot;
+            }
+
+            if visual {
+                print_state(&head_knot, &tail_knots);
             }
 
             // record tail position
@@ -75,20 +81,20 @@ pub fn run() {
     )
 }
 
-fn map_command(command: &String) -> (Vector, isize) {
+fn map_command(command: &String) -> (Point, isize) {
     let (direction, magnitude) = command.split_once(' ').unwrap();
     let direction_vector = match direction {
-        "U" => Vector { x: 0, y: 1 },
-        "D" => Vector { x: 0, y: -1 },
-        "L" => Vector { x: -1, y: 0 },
-        "R" => Vector { x: 1, y: 0 },
-        _ => Vector { x: 1, y: 0 },
+        "U" => Point { x: 0, y: 1 },
+        "D" => Point { x: 0, y: -1 },
+        "L" => Point { x: -1, y: 0 },
+        "R" => Point { x: 1, y: 0 },
+        _ => Point { x: 1, y: 0 },
     };
 
     (direction_vector, magnitude.parse::<isize>().unwrap())
 }
 
-fn move_head(head: Vector, tail: Vector, direction: Vector) -> (Vector, Vector) {
+fn move_head(head: Point, tail: Point, direction: Point) -> (Point, Point) {
     let new_head = head + direction;
     let head_tail_distance = new_head.distance_to(tail);
 
@@ -96,11 +102,57 @@ fn move_head(head: Vector, tail: Vector, direction: Vector) -> (Vector, Vector) 
         (new_head, tail)
     } else {
         // The tail should move a single unit in the direction of the head, in both dimensions
-        let tail_move = Vector {
+        let tail_move = Point {
             x: head_tail_distance.x / max(head_tail_distance.x.abs(), 1),
             y: head_tail_distance.y / max(head_tail_distance.y.abs(), 1),
         };
 
         (new_head, tail + tail_move)
     }
+}
+
+fn print_state(head: &Point, tails: &[Point; 9]) {
+    let mut screen = [[' '; 21]; 21];
+
+    for i in 0..21 {
+        for j in 0..21 {
+            if (i - head.x) % 10 == 0 || (j - head.y) % 10 == 0 {
+                screen[i as usize][j as usize] = '.';
+            }
+        }
+    }
+
+    for i in 1..tails.len() {
+        let node = tails[i - 1];
+        let next = tails[i];
+        let x = (10 + node.x - head.x) as usize;
+        let y = (10 + node.y - head.y) as usize;
+
+        let direction = Point {
+            x: next.x - node.x,
+            y: next.y - node.y,
+        };
+
+        screen[20 - x][20 - y] = match (direction.x, direction.y) {
+            (1, 1) | (-1, -1) => '\\',
+            (-1, 1) | (1, -1) => '/',
+            (0, 1) | (0, -1) => '-',
+            (1, 0) | (-1, 0) => '|',
+            (0, 0) | _ => '+',
+        };
+    }
+
+    // centre the screen on the head
+    screen[10][10] = 'o';
+
+    for line in screen {
+        for chararacter in line {
+            print!("{}", chararacter);
+        }
+        println!();
+    }
+
+    println!();
+    println!();
+    thread::sleep(time::Duration::from_millis(30));
 }
