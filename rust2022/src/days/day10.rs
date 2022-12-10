@@ -1,3 +1,6 @@
+use std::io::Write;
+use std::{thread, time};
+
 use crate::common::get_lines;
 
 pub fn run(visual: bool) {
@@ -30,6 +33,9 @@ pub fn run(visual: bool) {
                 } else {
                     print!("░");
                 }
+
+                thread::sleep(time::Duration::from_millis(100));
+                std::io::stdout().flush().unwrap();
 
                 if cycle % 40 == 0 {
                     println!();
