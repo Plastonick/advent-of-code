@@ -90,8 +90,6 @@ fn build_monkey(monkey_str: &str) -> Monkey {
     let operation = if lines[2].contains('+') {
         0
     } else if lines[2].contains("old * old") {
-        let line = lines[2].clone();
-        println!("{}", String::from(line));
         2
     } else {
         1
