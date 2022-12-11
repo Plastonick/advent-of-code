@@ -20,13 +20,13 @@ pub fn run() {
 }
 
 fn run_for_part(part: u8, monkeys: &Vec<Monkey>, items: &Vec<Vec<usize>>) {
-    let mut mut_items = items.clone();
+    let mut mutable_items = items.clone();
     let mut inspections: Vec<usize> = vec![0; monkeys.len()];
 
     let rounds = if part == 1 { 20 } else { 10_000 };
 
     for _ in 0..rounds {
-        (inspections, mut_items) = iterate(&monkeys, mut_items, inspections, part);
+        (inspections, mutable_items) = iterate(&monkeys, mutable_items, inspections, part);
     }
 
     announce(rounds, part, &inspections);
@@ -38,15 +38,15 @@ fn iterate(
     inspections: Vec<usize>,
     part: u8,
 ) -> (Vec<usize>, Vec<Vec<usize>>) {
-    let mut new_inspections = inspections.clone();
-    let mut new_items = starting_items.clone();
+    let mut mutable_inspections = inspections.clone();
+    let mut mutable_items = starting_items.clone();
     let mut index = 0;
 
     let common = monkeys.iter().map(|x| x.test).reduce(|x, y| x * y).unwrap();
 
-    for i in 0..new_inspections.len() {
+    for i in 0..mutable_inspections.len() {
         let monkey = &monkeys[i];
-        let items = new_items[i].clone();
+        let items = mutable_items[i].clone();
         let num_items = items.len();
 
         for item in items {
@@ -72,16 +72,16 @@ fn iterate(
                 monkey.if_false
             };
 
-            new_items[monkey_idx].push(worry_level);
+            mutable_items[monkey_idx].push(worry_level);
         }
 
-        new_items[index] = Vec::new();
-        new_inspections[index] += num_items;
+        mutable_items[index] = Vec::new();
+        mutable_inspections[index] += num_items;
 
         index += 1;
     }
 
-    (new_inspections, new_items)
+    (mutable_inspections, mutable_items)
 }
 
 fn build_monkey(monkey_str: &str) -> Monkey {
@@ -125,15 +125,15 @@ fn build_items(monkey_str: &str) -> Vec<usize> {
 }
 
 fn announce(rounds: usize, part: u8, inspections: &Vec<usize>) {
-    let mut new_monkeys = inspections.clone();
+    let mut mutable_inspections = inspections.clone();
 
-    new_monkeys.sort();
-    new_monkeys.reverse();
+    mutable_inspections.sort();
+    mutable_inspections.reverse();
 
     println!(
         "Day 11, Part {}: The level of monkey business after {} rounds is {}",
         part,
         rounds,
-        new_monkeys[0] * new_monkeys[1]
+        mutable_inspections[0] * mutable_inspections[1]
     );
 }
