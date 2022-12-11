@@ -7,7 +7,6 @@ struct Monkey {
     test: usize,
     if_true: usize,
     if_false: usize,
-    inspections: usize,
 }
 
 pub fn run() {
@@ -16,49 +15,37 @@ pub fn run() {
     let monkeys: Vec<Monkey> = file.split("\n\n").map(build_monkey).collect();
     let items: Vec<Vec<usize>> = file.split("\n\n").map(build_items).collect();
 
-    part1(&monkeys, &items);
-    part2(&monkeys, &items);
+    run_for_part(1, &monkeys, &items);
+    run_for_part(2, &monkeys, &items);
 }
 
-fn part1(monkeys: &Vec<Monkey>, items: &Vec<Vec<usize>>) {
-    let mut mut_monkeys = monkeys.clone();
+fn run_for_part(part: u8, monkeys: &Vec<Monkey>, items: &Vec<Vec<usize>>) {
     let mut mut_items = items.clone();
+    let mut inspections: Vec<usize> = vec![0; monkeys.len()];
 
-    let rounds = 20;
+    let rounds = if part == 1 { 20 } else { 10_000 };
 
     for _ in 0..rounds {
-        (mut_monkeys, mut_items) = iterate(mut_monkeys, mut_items, 1);
+        (inspections, mut_items) = iterate(&monkeys, mut_items, inspections, part);
     }
 
-    announce(rounds, 1, &mut_monkeys);
-}
-
-fn part2(monkeys: &Vec<Monkey>, items: &Vec<Vec<usize>>) {
-    let mut mut_monkeys = monkeys.clone();
-    let mut mut_items = items.clone();
-
-    let rounds = 10000;
-
-    for _ in 0..rounds {
-        (mut_monkeys, mut_items) = iterate(mut_monkeys, mut_items, 2);
-    }
-
-    announce(rounds, 1, &mut_monkeys);
+    announce(rounds, part, &inspections);
 }
 
 fn iterate(
-    monkeys: Vec<Monkey>,
+    monkeys: &Vec<Monkey>,
     starting_items: Vec<Vec<usize>>,
+    inspections: Vec<usize>,
     part: u8,
-) -> (Vec<Monkey>, Vec<Vec<usize>>) {
-    let mut new_monkeys = monkeys.clone();
+) -> (Vec<usize>, Vec<Vec<usize>>) {
+    let mut new_inspections = inspections.clone();
     let mut new_items = starting_items.clone();
     let mut index = 0;
 
     let common = monkeys.iter().map(|x| x.test).reduce(|x, y| x * y).unwrap();
 
-    for i in 0..new_monkeys.len() {
-        let monkey = new_monkeys[i].clone();
+    for i in 0..new_inspections.len() {
+        let monkey = &monkeys[i];
         let items = new_items[i].clone();
         let num_items = items.len();
 
@@ -85,26 +72,16 @@ fn iterate(
                 monkey.if_false
             };
 
-            let mut new_starting_items = new_items[monkey_idx].clone();
-            new_starting_items.push(worry_level);
-
-            new_items[monkey_idx] = new_starting_items;
-            new_monkeys[monkey_idx] = Monkey {
-                operation: new_monkeys[monkey_idx].operation,
-                ..new_monkeys[monkey_idx]
-            };
+            new_items[monkey_idx].push(worry_level);
         }
 
         new_items[index] = Vec::new();
-        new_monkeys[index] = Monkey {
-            inspections: monkey.inspections + num_items,
-            ..new_monkeys[index]
-        };
+        new_inspections[index] += num_items;
 
         index += 1;
     }
 
-    (new_monkeys, new_items)
+    (new_inspections, new_items)
 }
 
 fn build_monkey(monkey_str: &str) -> Monkey {
@@ -135,7 +112,6 @@ fn build_monkey(monkey_str: &str) -> Monkey {
         test,
         if_true,
         if_false,
-        inspections: 0,
     }
 }
 
@@ -150,15 +126,16 @@ fn build_items(monkey_str: &str) -> Vec<usize> {
     starting_items
 }
 
-fn announce(rounds: usize, part: u8, monkeys: &Vec<Monkey>) {
-    let mut new_monkeys = monkeys.clone();
+fn announce(rounds: usize, part: u8, inspections: &Vec<usize>) {
+    let mut new_monkeys = inspections.clone();
 
-    new_monkeys.sort_by(|x, y| y.inspections.cmp(&x.inspections));
+    new_monkeys.sort();
+    new_monkeys.reverse();
 
     println!(
         "Day 11, Part {}: The level of monkey business after {} rounds is {}",
         part,
         rounds,
-        new_monkeys[0].inspections * new_monkeys[1].inspections
+        new_monkeys[0] * new_monkeys[1]
     );
 }
