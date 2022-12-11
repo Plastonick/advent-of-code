@@ -1,3 +1,5 @@
+use num::integer::lcm;
+
 use crate::common::get_file_contents;
 
 #[derive(Clone)]
@@ -42,7 +44,11 @@ fn iterate(
     let mut mutable_items = starting_items.clone();
     let mut index = 0;
 
-    let common = monkeys.iter().map(|x| x.test).reduce(|x, y| x * y).unwrap();
+    let common = monkeys
+        .iter()
+        .map(|x| x.test)
+        .reduce(|x, y| lcm(x, y))
+        .unwrap();
 
     for i in 0..mutable_inspections.len() {
         let monkey = &monkeys[i];
