@@ -15,20 +15,7 @@ pub fn run() {
         .map(|(i, _)| unwrap_linear_position(i, width))
         .collect::<Vec<(usize, usize)>>();
 
-    let mut elevation_map: Vec<Vec<u8>> = file
-        .lines()
-        .map(|x| String::from(x).as_bytes().to_owned())
-        .collect();
-
-    // todo neaten this up into a .map
-    for row in 0..elevation_map.len() {
-        let map_row = &elevation_map[row];
-        for el in 0..map_row.len() {
-            let height = height_of_byte(elevation_map[row][el]);
-            elevation_map[row][el] = height;
-        }
-    }
-
+    let elevation_map = build_elevation_map(&file);
     let mut sources: HashMap<usize, HashSet<(usize, usize)>> = HashMap::new();
     sources.insert(0, HashSet::from_iter(vec![start_pos]));
 
@@ -158,4 +145,28 @@ fn height_of_byte(byte: u8) -> u8 {
         'E' => 26,
         _ => 1 + byte - 'a' as u8,
     }
+}
+
+fn build_elevation_map(file: &str) -> Vec<Vec<u8>> {
+    // // why won't this work!?
+    // let elevation_map: Vec<Vec<u8>> = file
+    //     .lines()
+    //     .map(|x| String::from(x).as_bytes().iter().map(height_of_byte))
+    //     .collect();
+
+    let mut elevation_map: Vec<Vec<u8>> = file
+        .lines()
+        .map(|x| String::from(x).as_bytes().to_owned())
+        .collect();
+
+    // todo neaten this up into a .map
+    for row in 0..elevation_map.len() {
+        let map_row = &elevation_map[row];
+        for el in 0..map_row.len() {
+            let height = height_of_byte(elevation_map[row][el]);
+            elevation_map[row][el] = height;
+        }
+    }
+
+    elevation_map
 }
