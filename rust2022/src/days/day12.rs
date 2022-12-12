@@ -27,27 +27,52 @@ pub fn run() {
         }
     }
 
+    let mut sources: HashMap<usize, HashSet<(usize, usize)>> = HashMap::new();
+    sources.insert(0, HashSet::from_iter(vec![start_pos]));
+
+    let part1_distance = solve_map(&mut sources, end_pos, &elevation_map);
+
+    sources.clear();
+    sources.insert(0, HashSet::from_iter(a_points));
+
+    let part2_distance = solve_map(&mut sources, end_pos, &elevation_map);
+
+    println!(
+        "Day 12, Part 1: Min distance from 'S' point is {}",
+        part1_distance
+    );
+    println!(
+        "Day 12, Part 2: Min distance from any 'a' point is {}",
+        part2_distance
+    );
+}
+
+fn solve_map(
+    sources: &mut HashMap<usize, HashSet<(usize, usize)>>,
+    target: (usize, usize),
+    elevation_map: &Vec<Vec<u8>>,
+) -> usize {
     // a list of points for each distance
-    let mut targets: HashMap<usize, HashSet<(usize, usize)>> = HashMap::new();
+
     let mut visited: HashSet<(usize, usize)> = HashSet::new();
 
-    targets.insert(0, HashSet::from_iter(a_points));
     let mut distance: usize = 0;
     let mut min_distance = 0;
 
     while min_distance == 0 {
-        let targets_at_distance = targets.get(&distance).expect("How?");
+        let targets_at_distance = sources.get(&distance).expect("How?");
         let mut new_neighbours: HashSet<(usize, usize)> = HashSet::new();
 
         distance += 1;
         for point in targets_at_distance {
             let point_height = elevation_map[point.0][point.1];
 
-            let neighbours = get_surrounding_points(point, (lines.len(), width));
+            let neighbours = get_surrounding_points(
+                point,
+                (elevation_map.len(), elevation_map.first().unwrap().len()),
+            );
 
             for neighbour in neighbours {
-                println!("Considering point ({}, {})", neighbour.0, neighbour.1);
-
                 // we've already found a shorter route, let's ignore it and move on
                 if visited.contains(&neighbour) {
                     continue;
@@ -57,22 +82,17 @@ pub fn run() {
 
                 // can we even visit this point?
                 if surrounding_point_height as isize - point_height as isize > 1 {
-                    println!("Too big of a height diff");
                     // no we cannot... continue
                     continue;
                 }
 
                 // is this point the end!?
-                if neighbour.0 == end_pos.0 && neighbour.1 == end_pos.1 {
-                    println!("We've made it!");
-
+                if neighbour == target {
                     // it is! We're done!
                     min_distance = distance;
                 }
 
-                // We've not already visited this, we _can_ visit this, let's visit it!
-                println!("Inserting new point, ({}, {})", neighbour.0, neighbour.1);
-
+                // We've not _already_ visited this and we _can_ visit this, let's visit it!
                 visited.insert(neighbour);
                 new_neighbours.insert(neighbour);
             }
@@ -82,14 +102,10 @@ pub fn run() {
             println!("Breaking early, no new neighbours found");
             break;
         }
-        targets.insert(distance, new_neighbours);
+        sources.insert(distance, new_neighbours);
     }
-    // let's route!
 
-    // dbg!(visited);
-    dbg!(end_pos);
-
-    println!("Day 12, Part1: Min distance is {}", min_distance);
+    min_distance
 }
 
 fn unwrap_linear_position(pos: usize, width: usize) -> (usize, usize) {
