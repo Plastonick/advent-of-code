@@ -1,6 +1,6 @@
 use std::collections::{HashMap, HashSet};
 
-use crate::common::{get_file_contents, get_lines};
+use crate::common::get_file_contents;
 
 pub fn run() {
     let file = get_file_contents("day12");
@@ -8,11 +8,17 @@ pub fn run() {
 
     let start_pos = unwrap_linear_position(file.find('S').unwrap(), width);
     let end_pos = unwrap_linear_position(file.find('E').unwrap(), width);
+    let a_points = file
+        .bytes()
+        .enumerate()
+        .filter(|(_, x)| *x == 'a' as u8)
+        .map(|(i, _)| unwrap_linear_position(i, width))
+        .collect::<Vec<(usize, usize)>>();
 
-    let lines = get_lines("day12");
-    let mut elevation_map: Vec<Vec<u8>> = lines.iter().map(|x| x.as_bytes().to_owned()).collect();
-
-    let mut a_points = vec![];
+    let mut elevation_map: Vec<Vec<u8>> = file
+        .lines()
+        .map(|x| String::from(x).as_bytes().to_owned())
+        .collect();
 
     // todo neaten this up into a .map
     for row in 0..elevation_map.len() {
@@ -20,10 +26,6 @@ pub fn run() {
         for el in 0..map_row.len() {
             let height = height_of_byte(elevation_map[row][el]);
             elevation_map[row][el] = height;
-
-            if height == height_of_byte('a' as u8) {
-                a_points.push((row, el));
-            }
         }
     }
 
@@ -43,7 +45,12 @@ pub fn run() {
     );
     println!(
         "Day 12, Part 2: Min distance from any 'a' point is {}",
-        part2_distance
+        // just in case the original 'S' was closer than any of the actual 'a' points
+        if part2_distance < part1_distance {
+            part2_distance
+        } else {
+            part1_distance
+        }
     );
 }
 
