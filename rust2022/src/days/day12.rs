@@ -12,11 +12,18 @@ pub fn run() {
     let lines = get_lines("day12");
     let mut elevation_map: Vec<Vec<u8>> = lines.iter().map(|x| x.as_bytes().to_owned()).collect();
 
+    let mut a_points = vec![];
+
     // todo neaten this up into a .map
     for row in 0..elevation_map.len() {
         let map_row = &elevation_map[row];
         for el in 0..map_row.len() {
-            elevation_map[row][el] = height_of_byte(elevation_map[row][el]);
+            let height = height_of_byte(elevation_map[row][el]);
+            elevation_map[row][el] = height;
+
+            if height == height_of_byte('a' as u8) {
+                a_points.push((row, el));
+            }
         }
     }
 
@@ -24,7 +31,7 @@ pub fn run() {
     let mut targets: HashMap<usize, HashSet<(usize, usize)>> = HashMap::new();
     let mut visited: HashSet<(usize, usize)> = HashSet::new();
 
-    targets.insert(0, HashSet::from_iter(vec![start_pos]));
+    targets.insert(0, HashSet::from_iter(a_points));
     let mut distance: usize = 0;
     let mut min_distance = 0;
 
