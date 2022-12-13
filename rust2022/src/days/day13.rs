@@ -28,15 +28,11 @@ pub fn run() {
         all_lines.push(pair.1);
     }
 
-    all_lines.sort_by(|x, y| {
-        if compare(x, y).unwrap() {
-            Ordering::Less
-        } else {
-            Ordering::Greater
-        }
+    all_lines.sort_by(|x, y| match compare(x, y) {
+        Some(true) => Ordering::Less,
+        Some(false) => Ordering::Greater,
+        None => Ordering::Equal,
     });
-
-    all_lines.reverse();
 
     let div2_index = all_lines.iter().position(|&x| x == "[[2]]").unwrap() + 1;
     let div6_index = all_lines.iter().position(|&x| x == "[[6]]").unwrap() + 1;
