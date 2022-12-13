@@ -36,6 +36,7 @@ fn main() {
         days::day10::run(args.visual);
         days::day11::run();
         days::day12::run();
+        days::day13::run();
     } else {
         match args.day {
             1 => days::day01::run(),
@@ -50,6 +51,7 @@ fn main() {
             10 => days::day10::run(args.visual),
             11 => days::day11::run(),
             12 => days::day12::run(),
+            13 => days::day13::run(),
             _ => println!("I haven't done this day yet ;("),
         };
     }
