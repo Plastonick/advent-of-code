@@ -1,3 +1,5 @@
+use std::cmp::Ordering;
+
 use crate::common::get_file_contents;
 
 pub fn run() {
@@ -14,9 +16,9 @@ pub fn run() {
         let result = compare(pair.0, pair.1);
 
         part_1_sum += match result {
-            0 => 0,
-            1 => i + 1,
-            _ => {
+            Some(false) => 0,
+            Some(true) => i + 1,
+            None => {
                 println!("Uh oh, this shouldn't happen");
                 0
             }
@@ -27,8 +29,11 @@ pub fn run() {
     }
 
     all_lines.sort_by(|x, y| {
-        let result = compare(x, y);
-        result.cmp(&1)
+        if compare(x, y).unwrap() {
+            Ordering::Less
+        } else {
+            Ordering::Greater
+        }
     });
 
     all_lines.reverse();
@@ -47,13 +52,13 @@ pub fn run() {
     );
 }
 
-fn compare(left: &str, right: &str) -> u8 {
+fn compare(left: &str, right: &str) -> Option<bool> {
     let left_elements = get_elements(&left);
     let right_elements = get_elements(&right);
 
     for (i, left_el) in left_elements.iter().enumerate() {
         if i >= right_elements.len() {
-            return 0;
+            return Some(false);
         }
 
         let right_el = &right_elements[i];
@@ -69,11 +74,11 @@ fn compare(left: &str, right: &str) -> u8 {
             let right_num = right_el.parse::<u8>().unwrap();
 
             if left_num < right_num {
-                return 1;
+                return Some(true);
             }
 
             if right_num < left_num {
-                return 0;
+                return Some(false);
             }
 
             // no valid comparison to be made, try the next element
@@ -100,7 +105,7 @@ fn compare(left: &str, right: &str) -> u8 {
         // now both are lists... compare them as lists!
         let sub_result = compare(&list_left_el, &list_right_el);
 
-        if sub_result < 2 {
+        if sub_result.is_some() {
             return sub_result;
         }
 
@@ -110,10 +115,11 @@ fn compare(left: &str, right: &str) -> u8 {
     // all of the elements of the left are matched to the right
     // are there fewer left elements? If so, it's the correct order!
     if left.len() < right.len() {
-        return 1;
+        return Some(true);
     }
 
-    2 // neither
+    // both lists are identically ordered
+    None
 }
 
 fn get_elements(list: &str) -> Vec<String> {
