@@ -1,6 +1,6 @@
 use crate::common::get_lines;
 
-pub fn run() {
+pub fn run(_: bool) {
     let lines = get_lines("day04");
     let mut total = 0;
     let mut captured = 0;

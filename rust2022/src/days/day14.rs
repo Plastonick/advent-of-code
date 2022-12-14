@@ -2,7 +2,7 @@ use std::{cmp::max, collections::HashSet};
 
 use crate::common::get_lines;
 
-pub fn run() {
+pub fn run(_: bool) {
     let lines = get_lines("day14");
 
     let (mut blocks, max_depth) = build_solid_surfaces(&lines);

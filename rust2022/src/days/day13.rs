@@ -2,7 +2,7 @@ use std::cmp::Ordering;
 
 use crate::common::get_file_contents;
 
-pub fn run() {
+pub fn run(_: bool) {
     let file = get_file_contents("day13");
     let pairs: Vec<_> = file
         .split("\n\n")

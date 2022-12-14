@@ -1,6 +1,6 @@
 use crate::common::get_lines;
 
-pub fn run() {
+pub fn run(_: bool) {
     let lines = get_lines("day02");
 
     let part_1_score = lines

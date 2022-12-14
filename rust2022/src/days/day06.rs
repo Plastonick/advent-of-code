@@ -2,7 +2,7 @@ use std::collections::HashSet;
 
 use crate::common::get_file_contents;
 
-pub fn run() {
+pub fn run(_: bool) {
     let buffer = get_file_contents("day06");
 
     let bytes = buffer.as_bytes();

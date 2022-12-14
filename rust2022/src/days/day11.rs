@@ -11,7 +11,7 @@ struct Monkey {
     if_false: usize,
 }
 
-pub fn run() {
+pub fn run(_: bool) {
     let file = get_file_contents("day11");
 
     let monkeys: Vec<Monkey> = file.split("\n\n").map(build_monkey).collect();

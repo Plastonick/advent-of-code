@@ -1,4 +1,6 @@
+use ascii_table::{Align, AsciiTable};
 use clap::{command, Parser};
+use std::time::{SystemTime, UNIX_EPOCH};
 
 mod common;
 mod days;
@@ -23,38 +25,62 @@ struct Args {
 fn main() {
     let args = Args::parse();
 
+    let days = [
+        days::day01::run,
+        days::day02::run,
+        days::day03::run,
+        days::day04::run,
+        days::day05::run,
+        days::day06::run,
+        days::day07::run,
+        days::day08::run,
+        days::day09::run,
+        days::day10::run,
+        days::day11::run,
+        days::day12::run,
+        days::day13::run,
+        days::day14::run,
+    ];
+
     if args.all {
-        days::day01::run();
-        days::day02::run();
-        days::day03::run();
-        days::day04::run();
-        days::day05::run();
-        days::day06::run();
-        days::day07::run();
-        days::day08::run();
-        days::day09::run(args.visual);
-        days::day10::run(args.visual);
-        days::day11::run();
-        days::day12::run();
-        days::day13::run();
-        days::day14::run();
+        let mut duration_data = Vec::new();
+
+        for (day, func) in days.iter().enumerate() {
+            let time_before = get_epoch_ms();
+            func(args.visual);
+            let duration = get_epoch_ms() - time_before;
+
+            duration_data.push(vec![format!("{}", day + 1), format!("{duration:.3}s")]);
+        }
+
+        let mut ascii_table = AsciiTable::default();
+        ascii_table
+            .column(0)
+            .set_header("Day")
+            .set_align(Align::Right);
+        ascii_table
+            .column(1)
+            .set_header("Duration")
+            .set_align(Align::Right);
+
+        ascii_table.print(duration_data);
     } else {
-        match args.day {
-            1 => days::day01::run(),
-            2 => days::day02::run(),
-            3 => days::day03::run(),
-            4 => days::day04::run(),
-            5 => days::day05::run(),
-            6 => days::day06::run(),
-            7 => days::day07::run(),
-            8 => days::day08::run(),
-            9 => days::day09::run(args.visual),
-            10 => days::day10::run(args.visual),
-            11 => days::day11::run(),
-            12 => days::day12::run(),
-            13 => days::day13::run(),
-            14 => days::day14::run(),
-            _ => println!("I haven't done this day yet ;("),
-        };
+        let day = days
+            .iter()
+            .enumerate()
+            .position(|(x, _)| (x + 1) as u16 == args.day);
+
+        if day.is_some() {
+            days[day.unwrap()](args.visual);
+        } else {
+            println!("I haven't done this day yet ;(");
+        }
     }
+}
+
+fn get_epoch_ms() -> f64 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_secs_f64()
 }

@@ -2,7 +2,7 @@ use std::{cmp::min, collections::HashMap};
 
 use crate::common::get_lines;
 
-pub fn run() {
+pub fn run(_: bool) {
     // ignore the first line, this just centres us at `/`
     let lines = &get_lines("day07")[1..];
 

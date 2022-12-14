@@ -1,6 +1,6 @@
 use crate::common::get_file_contents;
 
-pub fn run() {
+pub fn run(_: bool) {
     run_as_part(1);
     run_as_part(2);
 }

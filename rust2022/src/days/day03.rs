@@ -2,7 +2,7 @@ use std::collections::HashSet;
 
 use crate::common::get_lines;
 
-pub fn run() {
+pub fn run(_: bool) {
     let lines = get_lines("day03");
     let mut line_share_sum = 0;
     let mut group_sum = 0;

@@ -1,6 +1,6 @@
 use crate::common::get_file_contents;
 
-pub fn run() {
+pub fn run(_: bool) {
     let input = get_file_contents("day01");
 
     let groups = input.split("\n\n");
