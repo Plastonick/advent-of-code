@@ -7,11 +7,12 @@ pub fn run() {
 
     let (mut blocks, max_depth) = build_solid_surfaces(&lines);
 
+    let volume = count_area_under((500, 0), &blocks, max_depth + 2);
+
     let mut escaped = false;
     let mut sand_pieces = 0;
-    let mut sand_pieces_part_1 = 0;
 
-    loop {
+    while !escaped {
         // place a piece of sand at (0, 500) and watch it fall
         let mut sand = (500, 0);
         sand_pieces += 1;
@@ -30,7 +31,6 @@ pub fn run() {
                 if sand.1 >= max_depth && !escaped {
                     // we've escaped!
                     escaped = true;
-                    sand_pieces_part_1 = sand_pieces - 1;
                 }
             }
         }
@@ -43,11 +43,11 @@ pub fn run() {
 
     println!(
         "Day 14, Part 1: It took {} pieces of sand to start overflowing",
-        sand_pieces_part_1
+        sand_pieces - 1
     );
     println!(
         "Day 14, Part 2: It took {} pieces of sand to make a big pyramid",
-        sand_pieces
+        volume
     );
 }
 
@@ -84,6 +84,47 @@ fn move_sand(
 
     // I can't move, return none
     None
+}
+
+fn count_area_under(
+    point: (isize, isize),
+    blocks: &HashSet<(isize, isize)>,
+    floor: isize,
+) -> isize {
+    // path map from the source to the sink, remembering all visited nodes
+    let mut visited: HashSet<(isize, isize)> = HashSet::from([point]);
+    let mut last_sources: HashSet<(isize, isize)> = HashSet::from([point]);
+
+    while last_sources.len() > 0 {
+        let mut sources: HashSet<(isize, isize)> = HashSet::new();
+
+        for source in &last_sources {
+            let next_depth = source.1 + 1;
+
+            // it's too low! Leave it out
+            if next_depth >= floor {
+                // this can probably be break; since each wave should be the same depth...
+                continue;
+            }
+
+            for d in -1..=1 {
+                let next = (source.0 + d, next_depth);
+
+                // it's blocked! Leave it out
+                if blocks.contains(&next) {
+                    continue;
+                }
+
+                // it's good! Include it
+                sources.insert(next);
+                visited.insert(next);
+            }
+        }
+
+        last_sources = sources;
+    }
+
+    visited.len() as isize
 }
 
 fn build_solid_surfaces(lines: &Vec<String>) -> (HashSet<(isize, isize)>, isize) {
