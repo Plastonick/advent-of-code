@@ -44,14 +44,19 @@ fn main() {
 
     if args.all {
         let mut duration_data = Vec::new();
+        let all_start = get_epoch_ms();
 
         for (day, func) in days.iter().enumerate() {
-            let time_before = get_epoch_ms();
+            let func_start = get_epoch_ms();
             func(args.visual);
-            let duration = get_epoch_ms() - time_before;
+            let func_duration = get_epoch_ms() - func_start;
 
-            duration_data.push(vec![format!("{}", day + 1), format!("{duration:.3}s")]);
+            duration_data.push(vec![format!("{}", day + 1), format!("{func_duration:.3}s")]);
         }
+
+        let all_duration = get_epoch_ms() - all_start;
+
+        duration_data.push(vec![String::from("Total"), format!("{all_duration:.3}s")]);
 
         let mut ascii_table = AsciiTable::default();
         ascii_table
