@@ -9,3 +9,4 @@ edition = "2021"
 ascii_table = "4.0.2"
 clap = { version = "4.0.29", features = ["derive"] }
 num = "0.4.0"
+regex = "1.7.0"

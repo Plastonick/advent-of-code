@@ -25,7 +25,7 @@ struct Args {
 fn main() {
     let args = Args::parse();
 
-    let days = [
+    let days: [fn(bool); 15] = [
         days::day01::run,
         days::day02::run,
         days::day03::run,
@@ -40,6 +40,7 @@ fn main() {
         days::day12::run,
         days::day13::run,
         days::day14::run,
+        days::day15::run,
     ];
 
     if args.all {
