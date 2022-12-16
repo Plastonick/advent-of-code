@@ -1,4 +1,7 @@
-use std::{cmp::max, collections::HashMap};
+use std::{
+    cmp::max,
+    collections::{HashMap, HashSet},
+};
 
 use regex::Regex;
 
@@ -6,34 +9,35 @@ use crate::common::get_lines;
 
 #[derive(Debug)]
 struct Valve {
-    name: String,
+    index: usize,
     rate: isize,
-    leads_to: Vec<String>,
+    leads_to: HashSet<usize>,
 }
 
 impl Valve {
-    pub fn from_str(string: &str) -> Valve {
-        let pattern: Regex = Regex::new(
-            r"^Valve (\w+) has flow rate=(\d+); tunnels? leads? to valves? (\w+)(?:, (\w+))*$",
-        )
-        .unwrap();
+    pub fn from_str(string: &str, map: &HashMap<&str, usize>) -> Valve {
+        let pattern: Regex =
+            Regex::new(r"^Valve (\w+) has flow rate=(\d+); tunnels? leads? to valves? (.*)$")
+                .unwrap();
 
         let captures = pattern.captures(string).unwrap();
-        let name = String::from(captures.get(1).map(|m| m.as_str()).unwrap());
+        let index = map
+            .get(captures.get(1).map(|m| m.as_str()).unwrap())
+            .unwrap()
+            .to_owned();
         let rate = captures
             .get(2)
             .map(|m| m.as_str().parse::<isize>().unwrap())
             .unwrap();
 
-        let mut index = 3;
-        let mut leads_to = Vec::new();
-        while let Some(lead) = captures.get(index).map(|m| m.as_str()) {
-            leads_to.push(String::from(lead));
-            index += 1;
+        let mut leads_to = HashSet::new();
+        let lead_str = captures.get(3).map(|m| m.as_str()).unwrap();
+        for lead in lead_str.split(", ") {
+            leads_to.insert(map.get(lead).unwrap().to_owned());
         }
 
         Valve {
-            name,
+            index,
             rate,
             leads_to,
         }
@@ -42,20 +46,29 @@ impl Valve {
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
 struct State {
-    position: String,
+    position: usize,
     ttl: isize,
-    open: Vec<String>,
+    open_valves: Vec<usize>,
 }
 
 pub fn run(_: bool) {
-    let lines = get_lines("day16-test");
-    let valves: HashMap<String, Valve> = lines
+    let lines = get_lines("day16");
+
+    // let mut valves = Vec::new();
+    let mut name_index_map = HashMap::new();
+    for (index, line) in lines.iter().enumerate() {
+        let name = &line[6..8];
+        name_index_map.insert(name, index);
+    }
+
+    let valves: HashMap<usize, Valve> = lines
         .iter()
         .map(|x| {
-            let valve = Valve::from_str(x);
-            (valve.name.to_owned(), valve)
+            let valve = Valve::from_str(x, &name_index_map);
+            (valve.index.to_owned(), valve)
         })
         .collect();
+
     let time_to_eruption = 30;
 
     // let mut cache = HashMap::new();
@@ -73,15 +86,12 @@ pub fn run(_: bool) {
     // );
 
     let start = State {
-        position: String::from("AA"),
+        position: name_index_map.get("AA").unwrap().to_owned(),
         ttl: time_to_eruption,
-        open: Vec::new(),
+        open_valves: Vec::new(),
     };
     // let mut states = Vec::new();
     // states.push(start);
-
-    // let mut best = 0;
-    let mut cache = HashMap::new();
 
     // loop {
     //     for (state, released) in states.pop() {
@@ -133,9 +143,16 @@ pub fn run(_: bool) {
     //     }
     // }
 
+    let mut cache = HashMap::new();
     let best = get_future_value(start, &valves, &mut cache);
 
     println!("Cache size: {}", cache.len());
+
+    // TODO
+
+    // Map out the entire tunnel system and remove any empty valves
+
+    // TODO
 
     println!(
         "Day 16, Part 1: The most I can release in {} minutes is {}",
@@ -145,16 +162,16 @@ pub fn run(_: bool) {
 
 fn get_future_value(
     state: State,
-    valves: &HashMap<String, Valve>,
+    valves: &HashMap<usize, Valve>,
     value_cache: &mut HashMap<State, isize>,
 ) -> isize {
-    // if we've already been in this state before, return how valuable it was
+    // if we've already been in this state before, return how valuable it was last
     if let Some(cache_value) = value_cache.get(&state) {
         return cache_value.to_owned();
     }
 
     let time_expired = state.ttl <= 0;
-    let all_valves_open = state.open.len() == valves.len();
+    let all_valves_open = state.open_valves.len() == valves.len();
 
     if time_expired || all_valves_open {
         // the volcano's erupted, we can't improve, I hope I've done enough!
@@ -166,30 +183,32 @@ fn get_future_value(
     let at_valve = valves.get(&state.position).unwrap();
     let mut best_increase = 0;
 
-    // can we open the current valve?
-    if !state.open.contains(&state.position) {
-        let mut now_open = state.open.clone(); // TODO clone is bad mkay
-        now_open.push(at_valve.name.clone()); // TODO clone is bad mkay
+    // can we open the current valve? Is it worth it?
+    if at_valve.rate > 0 && !state.open_valves.contains(&state.position) {
+        let mut now_open = state.open_valves.clone(); // TODO clone is bad mkay
+        now_open.push(at_valve.index);
+
+        // sort the list, this makes the caching worth it!
         now_open.sort();
 
         // try opening the current state
         let try_state = State {
-            open: now_open,
+            open_valves: now_open,
             ttl: state.ttl - 1,
-            position: state.position.clone(),
+            position: state.position,
         };
 
         let future_value = get_future_value(try_state, valves, value_cache);
-        let valve_open_value = at_valve.rate * state.ttl;
+        let valve_open_value = at_valve.rate * (state.ttl - 1);
         best_increase = max(best_increase, valve_open_value + future_value);
     }
 
     // can we go to a different valve?
     for valve_name in &at_valve.leads_to {
         let try_state = State {
-            position: valve_name.clone(),
+            position: valve_name.to_owned(),
             ttl: state.ttl - 1,
-            open: state.open.clone(), // TODO clone is bad mkay
+            open_valves: state.open_valves.clone(), // TODO clone is bad mkay
         };
 
         let future_value = get_future_value(try_state, valves, value_cache);
@@ -199,4 +218,63 @@ fn get_future_value(
     value_cache.insert(state, best_increase);
 
     best_increase
+}
+
+fn build_distance_matrix(valves: &HashMap<usize, Valve>) -> HashMap<(usize, usize), usize> {
+    let mut matrix: HashMap<(usize, usize), usize> = HashMap::new();
+
+    for (_, a) in valves {
+        for (_, b) in valves {
+            if a.index == b.index {
+                continue;
+            }
+
+            let dist = shortest_distance_between(a.index, b.index, &valves);
+
+            matrix.insert((a.index, b.index), dist);
+            matrix.insert((b.index, a.index), dist);
+        }
+    }
+
+    dbg!(&matrix);
+
+    matrix
+}
+
+fn shortest_distance_between(a: usize, b: usize, valves: &HashMap<usize, Valve>) -> usize {
+    let mut dist = 0;
+    let mut wave: Vec<&usize> = vec![&a];
+    let mut visited = HashSet::new();
+    visited.insert(a);
+
+    loop {
+        dist += 1;
+
+        if dist > valves.len() {
+            break;
+        }
+
+        let mut next_wave = Vec::new();
+
+        for indx in wave.pop() {
+            let valve = valves.get(&indx).unwrap();
+
+            for neighbour in &valve.leads_to {
+                if visited.contains(&neighbour) {
+                    continue;
+                }
+
+                if neighbour.to_owned() == b {
+                    return dist;
+                } else {
+                    visited.insert(neighbour.to_owned());
+                    next_wave.push(neighbour);
+                }
+            }
+        }
+
+        wave = next_wave;
+    }
+
+    usize::MAX
 }
