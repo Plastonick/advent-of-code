@@ -17,14 +17,7 @@ pub fn run(_: bool) {
 
     let elevation_map = &file
         .lines()
-        .map(|x| {
-            String::from(x)
-                .as_bytes()
-                .iter()
-                .copied()
-                .map(height_of_byte)
-                .collect()
-        })
+        .map(|x| x.as_bytes().iter().copied().map(height_of_byte).collect())
         .collect();
 
     let mut sources: HashMap<usize, HashSet<(usize, usize)>> = HashMap::new();
