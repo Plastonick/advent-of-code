@@ -70,15 +70,6 @@ pub fn run(_: bool) {
         })
         .collect();
 
-    let time_to_eruption = 30;
-    let start = State {
-        position: name_index_map.get("AA").unwrap().to_owned(),
-        el_position: name_index_map.get("AA").unwrap().to_owned(),
-        ttl: time_to_eruption,
-        el_ttl: 0,
-        open: 0,
-    };
-
     let matrix: HashMap<(usize, usize), usize> = build_distance_matrix(&valves);
     let mut cache = HashMap::new();
 
@@ -89,11 +80,38 @@ pub fn run(_: bool) {
         .map(|(i, x)| (i.to_owned(), x))
         .collect::<HashMap<_, _>>();
 
-    let best = get_future_value(start, &flow_valves, &matrix, &mut cache);
+    let best_solo = get_future_value(
+        State {
+            position: name_index_map.get("AA").unwrap().to_owned(),
+            el_position: name_index_map.get("AA").unwrap().to_owned(),
+            ttl: 30,
+            el_ttl: 0,
+            open: 0,
+        },
+        &flow_valves,
+        &matrix,
+        &mut cache,
+    );
+    let best_with_elephant = get_future_value(
+        State {
+            position: name_index_map.get("AA").unwrap().to_owned(),
+            el_position: name_index_map.get("AA").unwrap().to_owned(),
+            ttl: 26,
+            el_ttl: 26,
+            open: 0,
+        },
+        &flow_valves,
+        &matrix,
+        &mut cache,
+    );
 
     println!(
-        "Day 16, Part 1: The most I can release in {} minutes is {}",
-        time_to_eruption, best
+        "Day 16, Part 1: The most I can release in 30 minutes is {}",
+        best_solo
+    );
+    println!(
+        "Day 16, Part 2: The most I can release with the elephant in 26 minutes is {}",
+        best_with_elephant
     );
 }
 
@@ -155,7 +173,7 @@ fn get_future_value(
         }
 
         for (_, el_try_valve) in valves {
-            // we don't want to open the same valve as the elephant!
+            // we don't want the elephant to try opening the valve we're going to open!
             if try_valve.index == el_try_valve.index {
                 continue;
             }
@@ -180,7 +198,7 @@ fn get_future_value(
 
             // let's try moving to this valve!
             let try_state = State {
-                position: el_try_valve.index,
+                position: try_valve.index,
                 el_position: el_try_valve.index,
                 ttl: new_ttl,
                 el_ttl: new_el_ttl,
@@ -193,20 +211,6 @@ fn get_future_value(
                 future_value + (new_ttl * try_valve.rate) + (new_el_ttl * el_try_valve.rate),
             );
         }
-
-        // // how long we'll have left over after traveling + opening the valve
-        // let new_ttl = state.ttl - distance - 1;
-
-        // // let's try moving to this valve!
-        // let try_state = State {
-        //     position: try_valve.index,
-        //     ttl: new_ttl,
-        //     open: state.open + bit_mask, // "close" the valve we're trying!
-        //     ..state
-        // };
-
-        // let future_value = get_future_value(try_state, valves, distances, value_cache);
-        // best_increase = max(best_increase, future_value + (new_ttl * try_valve.rate));
     }
 
     value_cache.insert(state, best_increase);
