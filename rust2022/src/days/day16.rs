@@ -47,9 +47,8 @@ impl Valve {
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
 struct State {
     position: usize,
-    el_position: usize,
+    players_remaining: u8,
     ttl: usize,
-    el_ttl: usize,
     open: usize,
 }
 
@@ -80,14 +79,15 @@ pub fn run(_: bool) {
         .map(|(i, x)| (i.to_owned(), x))
         .collect::<HashMap<_, _>>();
 
+    let start_pos = name_index_map.get("AA").unwrap().to_owned();
     let best_solo = get_future_value(
         State {
-            position: name_index_map.get("AA").unwrap().to_owned(),
-            el_position: name_index_map.get("AA").unwrap().to_owned(),
+            position: start_pos,
             ttl: 30,
-            el_ttl: 0,
+            players_remaining: 0,
             open: 0,
         },
+        (start_pos, 30),
         &flow_valves,
         &matrix,
         &mut cache,
@@ -95,11 +95,11 @@ pub fn run(_: bool) {
     let best_with_elephant = get_future_value(
         State {
             position: name_index_map.get("AA").unwrap().to_owned(),
-            el_position: name_index_map.get("AA").unwrap().to_owned(),
             ttl: 26,
-            el_ttl: 26,
+            players_remaining: 1,
             open: 0,
         },
+        (start_pos, 26),
         &flow_valves,
         &matrix,
         &mut cache,
@@ -117,6 +117,7 @@ pub fn run(_: bool) {
 
 fn get_future_value(
     state: State,
+    initial: (usize, usize),
     valves: &HashMap<usize, &Valve>,
     distances: &HashMap<(usize, usize), usize>,
     value_cache: &mut HashMap<State, usize>,
@@ -126,12 +127,28 @@ fn get_future_value(
         return cache_value.to_owned();
     }
 
+    // we need at least three ticks to move, open, and reap the reward from pressure release
     let time_expired = state.ttl < 3;
-
     if time_expired {
         // the volcano's erupted, we can't improve, I hope I've done enough!
 
-        return 0;
+        if state.players_remaining > 0 {
+            let (initial_pos, initial_ttl) = initial;
+            return get_future_value(
+                State {
+                    position: initial_pos,
+                    players_remaining: state.players_remaining - 1,
+                    ttl: initial_ttl,
+                    ..state
+                },
+                initial,
+                valves,
+                distances,
+                value_cache,
+            );
+        } else {
+            return 0;
+        }
     }
 
     // enumerate the possible actions and see what the most valuable action is
@@ -164,53 +181,8 @@ fn get_future_value(
             ..state
         };
 
-        let future_value = get_future_value(try_state, valves, distances, value_cache);
+        let future_value = get_future_value(try_state, initial, valves, distances, value_cache);
         best_increase = max(best_increase, future_value + (new_ttl * try_valve.rate));
-
-        // always need at least 3 ticks, 1 to move, 1 to open, and 1 to reap the benefits
-        if state.el_ttl < 3 {
-            continue;
-        }
-
-        for (_, el_try_valve) in valves {
-            // we don't want the elephant to try opening the valve we're going to open!
-            if try_valve.index == el_try_valve.index {
-                continue;
-            }
-
-            // have I been here?
-            let el_bit_mask = 2 << el_try_valve.index;
-            if state.open & el_bit_mask != 0 {
-                // we've already opened this one, no reason to open it again
-                continue;
-            }
-
-            let el_distance = distances[&(state.el_position, el_try_valve.index)];
-
-            // do we have time to move here and open the valve and let that valve run for at least 1 tick?
-            if state.el_ttl < el_distance + 1 {
-                // no, don't bother trying this one
-                continue;
-            }
-
-            // how long we'll have left over after traveling + opening the valve
-            let new_el_ttl = state.el_ttl - el_distance - 1;
-
-            // let's try moving to this valve!
-            let try_state = State {
-                position: try_valve.index,
-                el_position: el_try_valve.index,
-                ttl: new_ttl,
-                el_ttl: new_el_ttl,
-                open: state.open + bit_mask + el_bit_mask, // "close" the valve we're trying!
-            };
-
-            let future_value = get_future_value(try_state, valves, distances, value_cache);
-            best_increase = max(
-                best_increase,
-                future_value + (new_ttl * try_valve.rate) + (new_el_ttl * el_try_valve.rate),
-            );
-        }
     }
 
     value_cache.insert(state, best_increase);
