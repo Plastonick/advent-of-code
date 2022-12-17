@@ -52,10 +52,9 @@ struct State {
 }
 
 pub fn run(_: bool) {
-    let lines = get_lines("day16");
+    let lines = get_lines("day16-test");
 
-    // let mut valves = Vec::new();
-    let mut name_index_map = HashMap::new();
+    let mut name_index_map: HashMap<&str, usize> = HashMap::new();
     for (index, line) in lines.iter().enumerate() {
         let name = &line[6..8];
         name_index_map.insert(name, index);
@@ -70,78 +69,15 @@ pub fn run(_: bool) {
         .collect();
 
     let time_to_eruption = 30;
-
-    // let mut cache = HashMap::new();
-    // let best_value = get_best_value(
-    //     (
-    //         State {
-    //             position: String::from("AA"),
-    //             ttl: time_to_eruption,
-    //             open: Vec::new(),
-    //         },
-    //         0,
-    //     ),
-    //     &valves,
-    //     &mut cache,
-    // );
-
     let start = State {
         position: name_index_map.get("AA").unwrap().to_owned(),
         ttl: time_to_eruption,
         open_valves: Vec::new(),
     };
-    // let mut states = Vec::new();
-    // states.push(start);
 
-    // loop {
-    //     for (state, released) in states.pop() {
-    //         let time_expired = state.ttl <= 0;
-    //         let all_valves_open = state.open.len() == valves.len();
-    //         let best_possible = 50; // TODO
+    let dist = shortest_distance_between(8, 4, &valves, &name_index_map);
 
-    //         if time_expired || all_valves_open || best_possible < best {
-    //             best = released;
-
-    //             cache.insert(state, released);
-
-    //             continue;
-    //         }
-
-    //         let at_valve = valves.get(&state.position).unwrap();
-
-    //         // can we open the current valve?
-    //         if !state.open.contains(&state.position) {
-    //             let mut now_open = state.open.clone(); // TODO clone is bad mkay
-    //             now_open.push(at_valve.name.clone()); // TODO clone is bad mkay
-    //             now_open.sort();
-
-    //             // try opening the current state
-    //             let try_state = State {
-    //                 open: now_open,
-    //                 ttl: state.ttl - 1,
-    //                 position: state.position.clone(),
-    //             };
-
-    //             states.push((try_state, released + (at_valve.rate * state.ttl)));
-    //         }
-
-    //         // can we go to a different valve?
-    //         for valve_name in &at_valve.leads_to {
-    //             let try_state = State {
-    //                 position: valve_name.clone(),
-    //                 ttl: state.ttl - 1,
-    //                 open: state.open.clone(), // TODO clone is bad mkay
-    //             };
-
-    //             states.push((try_state, released));
-    //         }
-    //     }
-
-    //     // when we've not got any more states to look over
-    //     if states.len() == 0 {
-    //         break;
-    //     }
-    // }
+    let _matrix = build_distance_matrix(&valves, &name_index_map);
 
     let mut cache = HashMap::new();
     let best = get_future_value(start, &valves, &mut cache);
@@ -220,16 +156,20 @@ fn get_future_value(
     best_increase
 }
 
-fn build_distance_matrix(valves: &HashMap<usize, Valve>) -> HashMap<(usize, usize), usize> {
+fn build_distance_matrix(
+    valves: &HashMap<usize, Valve>,
+    name_map: &HashMap<&str, usize>,
+) -> HashMap<(usize, usize), usize> {
     let mut matrix: HashMap<(usize, usize), usize> = HashMap::new();
 
     for (_, a) in valves {
         for (_, b) in valves {
-            if a.index == b.index {
+            // we only need to do one direction, then trivially duplicate it
+            if a.index <= b.index {
                 continue;
             }
 
-            let dist = shortest_distance_between(a.index, b.index, &valves);
+            let dist = shortest_distance_between(a.index, b.index, &valves, &name_map);
 
             matrix.insert((a.index, b.index), dist);
             matrix.insert((b.index, a.index), dist);
@@ -241,7 +181,12 @@ fn build_distance_matrix(valves: &HashMap<usize, Valve>) -> HashMap<(usize, usiz
     matrix
 }
 
-fn shortest_distance_between(a: usize, b: usize, valves: &HashMap<usize, Valve>) -> usize {
+fn shortest_distance_between(
+    a: usize,
+    b: usize,
+    valves: &HashMap<usize, Valve>,
+    name_map: &HashMap<&str, usize>,
+) -> usize {
     let mut dist = 0;
     let mut wave: Vec<&usize> = vec![&a];
     let mut visited = HashSet::new();
@@ -250,7 +195,8 @@ fn shortest_distance_between(a: usize, b: usize, valves: &HashMap<usize, Valve>)
     loop {
         dist += 1;
 
-        if dist > valves.len() {
+        // the distance must always be less than the number of valves
+        if dist > (valves.len() * 2) {
             break;
         }
 
@@ -260,11 +206,13 @@ fn shortest_distance_between(a: usize, b: usize, valves: &HashMap<usize, Valve>)
             let valve = valves.get(&indx).unwrap();
 
             for neighbour in &valve.leads_to {
+                // if we've already visited this valve,
+                // no reason to see it again
                 if visited.contains(&neighbour) {
                     continue;
                 }
 
-                if neighbour.to_owned() == b {
+                if neighbour == &b {
                     return dist;
                 } else {
                     visited.insert(neighbour.to_owned());
@@ -273,8 +221,28 @@ fn shortest_distance_between(a: usize, b: usize, valves: &HashMap<usize, Valve>)
             }
         }
 
+        // we've exhausted our neighbours! How is that!?
+        if next_wave.len() == 0 {
+            break;
+        }
+
         wave = next_wave;
     }
 
-    usize::MAX
+    print!("No route ");
+
+    for (name, indx) in name_map {
+        if indx == &a {
+            print!("from {} ", name);
+        }
+    }
+
+    for (name, indx) in name_map {
+        if indx == &b {
+            print!("to {}. ", name);
+        }
+    }
+
+    println!("We should always have a route between any two valves...");
+    panic!()
 }
