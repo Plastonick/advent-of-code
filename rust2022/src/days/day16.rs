@@ -80,8 +80,6 @@ pub fn run(_: bool) {
     let mut cache = HashMap::new();
     let best = get_future_value(start, &valves, &matrix, &mut cache);
 
-    println!("Cache size: {}", cache.len());
-
     println!(
         "Day 16, Part 1: The most I can release in {} minutes is {}",
         time_to_eruption, best
@@ -127,7 +125,7 @@ fn get_future_value(
 
         let distance = distances[&(state.position, try_valve.index)];
 
-        // do we have time to move here and open the valve and let that valve run for at least a minute?
+        // do we have time to move here and open the valve and let that valve run for at least 1 tick?
         if state.ttl < distance + 1 {
             // no, don't bother trying this one
             continue;
@@ -146,32 +144,6 @@ fn get_future_value(
         let future_value = get_future_value(try_state, valves, distances, value_cache);
         best_increase = max(best_increase, future_value + (ttl * try_valve.rate));
     }
-
-    // // can we open the current valve? Is it worth it?
-    // if at_valve.rate > 0 && (state.open & bit_mask) == 0 {
-    //     // try opening the current state
-    //     let try_state = State {
-    //         open: state.open + bit_mask,
-    //         ttl: state.ttl - 1,
-    //         position: state.position,
-    //     };
-
-    //     let future_value = get_future_value(try_state, valves, distances, value_cache);
-    //     let valve_open_value = at_valve.rate * (state.ttl - 1);
-    //     best_increase = max(best_increase, valve_open_value + future_value);
-    // }
-
-    // // can we go to a different valve?
-    // for valve_index in &at_valve.leads_to {
-    //     let try_state = State {
-    //         position: valve_index.to_owned(),
-    //         ttl: state.ttl - 1,
-    //         open: state.open,
-    //     };
-
-    //     let future_value = get_future_value(try_state, valves, distances, value_cache);
-    //     best_increase = max(best_increase, future_value);
-    // }
 
     value_cache.insert(state, best_increase);
 
