@@ -8,8 +8,8 @@ enum Direction {
     Right,
 }
 
-pub fn run(_: bool) {
-    let file = get_file_contents("day17-test");
+pub fn run(visual: bool) {
+    let file = get_file_contents("day17");
     let directions = file
         .as_bytes()
         .iter()
@@ -22,10 +22,30 @@ pub fn run(_: bool) {
         })
         .collect::<Vec<_>>();
 
+    // Blocks
+    //
+    // ####
+    //
+    // .#.
+    // ###
+    // .#.
+    //
+    // ..#
+    // ..#
+    // ###
+    //
+    // #
+    // #
+    // #
+    // #
+    //
+    // ##
+    // ##
+
     let blocks = [
         vec![(0, 0), (1, 0), (2, 0), (3, 0)],
         vec![(1, 0), (0, 1), (1, 1), (2, 1), (1, 2)],
-        vec![(0, 0), (0, 1), (0, 2), (2, 1), (2, 2)],
+        vec![(0, 0), (1, 0), (2, 0), (2, 1), (2, 2)],
         vec![(0, 0), (0, 1), (0, 2), (0, 3)],
         vec![(0, 0), (1, 0), (0, 1), (1, 1)],
     ];
@@ -35,14 +55,20 @@ pub fn run(_: bool) {
     let mut block_index = 0;
     let mut direction_index = 0;
     let mut board: Vec<(isize, isize)> = Vec::new();
-    let total_moves = 2022;
+    // let total_moves = 1_000_000_000_000;
+    let total_moves = 3000;
+    let part_1_limit = 2022;
+    let mut part_1_solution = 0;
 
     while block_index < total_moves {
+        if block_index == 2022 {
+            part_1_solution = max_height;
+        }
+
         let block = &blocks[block_index % blocks.len()];
+
         let mut height = max_height + 3;
         let mut left = 2;
-
-        print(&board);
 
         loop {
             // apply wind
@@ -67,13 +93,12 @@ pub fn run(_: bool) {
             // if the block can't exist lower down, revert the height drop, freeze the block there, and terminate
             if !can_exist(height, left, block, &board) {
                 height += 1;
-
                 // add the block to the board, and re-calculate the max height
                 for point in block {
                     let x = point.0 + left;
                     let y = point.1 + height;
 
-                    max_height = max(max_height, y);
+                    max_height = max(max_height, y + 1);
                     board.push((x, y));
                 }
 
@@ -84,9 +109,13 @@ pub fn run(_: bool) {
         block_index += 1;
     }
 
+    if visual {
+        print(&board);
+    }
+
     println!(
         "Day 17, Part 1: The tetris board is {} units high after {} moves",
-        max_height, total_moves
+        part_1_solution, part_1_limit
     );
 }
 
@@ -127,7 +156,7 @@ fn print(board: &Vec<(isize, isize)>) {
     for y in 0..=height {
         print!("|");
         // print it top to bottom
-        let yinv = -y;
+        let yinv = height - y;
         for x in 0..width {
             if board.contains(&(x, yinv)) {
                 print!("#");
@@ -144,23 +173,3 @@ fn print(board: &Vec<(isize, isize)>) {
     println!();
     println!();
 }
-
-// Blocks
-//
-// ####
-//
-// .#.
-// ###
-// .#.
-//
-// ..#
-// ..#
-// ###
-//
-// #
-// #
-// #
-// #
-//
-// ##
-// ##
