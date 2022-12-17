@@ -47,7 +47,9 @@ impl Valve {
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
 struct State {
     position: usize,
+    // el_position: usize,
     ttl: usize,
+    // el_ttl: usize,
     open: usize,
 }
 
@@ -76,9 +78,16 @@ pub fn run(_: bool) {
     };
 
     let matrix: HashMap<(usize, usize), usize> = build_distance_matrix(&valves);
-
     let mut cache = HashMap::new();
-    let best = get_future_value(start, &valves, &matrix, &mut cache);
+
+    // don't consider any valves with a 0 flow
+    let flow_valves = valves
+        .iter()
+        .filter(|(_, x)| x.rate > 0)
+        .map(|(i, x)| (i.to_owned(), x))
+        .collect::<HashMap<_, _>>();
+
+    let best = get_future_value(start, &flow_valves, &matrix, &mut cache);
 
     println!(
         "Day 16, Part 1: The most I can release in {} minutes is {}",
@@ -88,7 +97,7 @@ pub fn run(_: bool) {
 
 fn get_future_value(
     state: State,
-    valves: &HashMap<usize, Valve>,
+    valves: &HashMap<usize, &Valve>,
     distances: &HashMap<(usize, usize), usize>,
     value_cache: &mut HashMap<State, usize>,
 ) -> usize {
@@ -109,17 +118,11 @@ fn get_future_value(
     let mut best_increase = 0;
 
     // go through all closed valves and try opening them!
-    for (_, valve) in valves {
+    for (_, try_valve) in valves {
         // have I been here?
-        let bit_mask = 2 << valve.index;
-        if state.open & bit_mask > 0 {
+        let bit_mask = 2 << try_valve.index;
+        if state.open & bit_mask != 0 {
             // we've already opened this one, no reason to open it again
-            continue;
-        }
-
-        let try_valve = valves.get(&valve.index).unwrap();
-        if try_valve.rate == 0 {
-            // this has no flow! Don't waste time opening it...
             continue;
         }
 
