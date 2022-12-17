@@ -94,7 +94,7 @@ pub fn run(_: bool) {
     );
     let best_with_elephant = get_future_value(
         State {
-            position: name_index_map.get("AA").unwrap().to_owned(),
+            position: start_pos,
             ttl: 26,
             players_remaining: 1,
             open: 0,
