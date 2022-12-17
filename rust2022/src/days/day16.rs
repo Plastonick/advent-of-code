@@ -10,7 +10,7 @@ use crate::common::get_lines;
 #[derive(Debug)]
 struct Valve {
     index: usize,
-    rate: isize,
+    rate: usize,
     leads_to: HashSet<usize>,
 }
 
@@ -27,7 +27,7 @@ impl Valve {
             .to_owned();
         let rate = captures
             .get(2)
-            .map(|m| m.as_str().parse::<isize>().unwrap())
+            .map(|m| m.as_str().parse::<usize>().unwrap())
             .unwrap();
 
         let mut leads_to = HashSet::new();
@@ -47,7 +47,7 @@ impl Valve {
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
 struct State {
     position: usize,
-    ttl: isize,
+    ttl: usize,
     open: usize,
 }
 
@@ -92,8 +92,8 @@ fn get_future_value(
     state: State,
     valves: &HashMap<usize, Valve>,
     distances: &HashMap<(usize, usize), usize>,
-    value_cache: &mut HashMap<State, isize>,
-) -> isize {
+    value_cache: &mut HashMap<State, usize>,
+) -> usize {
     // if we've already been in this state before, return how valuable it was last
     if let Some(cache_value) = value_cache.get(&state) {
         return cache_value.to_owned();
@@ -108,36 +108,70 @@ fn get_future_value(
     }
 
     // enumerate the possible actions and see what the most valuable action is
-    let at_valve = valves.get(&state.position).unwrap();
     let mut best_increase = 0;
 
-    let bit_mask = 2 << state.position;
+    // go through all closed valves and try opening them!
+    for (_, valve) in valves {
+        // have I been here?
+        let bit_mask = 2 << valve.index;
+        if state.open & bit_mask > 0 {
+            // we've already opened this one, no reason to open it again
+            continue;
+        }
 
-    // can we open the current valve? Is it worth it?
-    if at_valve.rate > 0 && (state.open & bit_mask) == 0 {
-        // try opening the current state
+        let try_valve = valves.get(&valve.index).unwrap();
+        if try_valve.rate == 0 {
+            // this has no flow! Don't waste time opening it...
+            continue;
+        }
+
+        let distance = distances[&(state.position, try_valve.index)];
+
+        // do we have time to move here and open the valve and let that valve run for at least a minute?
+        if state.ttl < distance + 1 {
+            // no, don't bother trying this one
+            continue;
+        }
+
+        // how long we'll have left over after traveling + opening the valve
+        let ttl = state.ttl - distance - 1;
+
+        // let's try moving to this valve!
         let try_state = State {
-            open: state.open + bit_mask,
-            ttl: state.ttl - 1,
-            position: state.position,
+            position: try_valve.index,
+            ttl,
+            open: state.open + bit_mask, // "close" the valve we're trying!
         };
 
         let future_value = get_future_value(try_state, valves, distances, value_cache);
-        let valve_open_value = at_valve.rate * (state.ttl - 1);
-        best_increase = max(best_increase, valve_open_value + future_value);
+        best_increase = max(best_increase, future_value + (ttl * try_valve.rate));
     }
 
-    // can we go to a different valve?
-    for valve_index in &at_valve.leads_to {
-        let try_state = State {
-            position: valve_index.to_owned(),
-            ttl: state.ttl - 1,
-            open: state.open,
-        };
+    // // can we open the current valve? Is it worth it?
+    // if at_valve.rate > 0 && (state.open & bit_mask) == 0 {
+    //     // try opening the current state
+    //     let try_state = State {
+    //         open: state.open + bit_mask,
+    //         ttl: state.ttl - 1,
+    //         position: state.position,
+    //     };
 
-        let future_value = get_future_value(try_state, valves, distances, value_cache);
-        best_increase = max(best_increase, future_value);
-    }
+    //     let future_value = get_future_value(try_state, valves, distances, value_cache);
+    //     let valve_open_value = at_valve.rate * (state.ttl - 1);
+    //     best_increase = max(best_increase, valve_open_value + future_value);
+    // }
+
+    // // can we go to a different valve?
+    // for valve_index in &at_valve.leads_to {
+    //     let try_state = State {
+    //         position: valve_index.to_owned(),
+    //         ttl: state.ttl - 1,
+    //         open: state.open,
+    //     };
+
+    //     let future_value = get_future_value(try_state, valves, distances, value_cache);
+    //     best_increase = max(best_increase, future_value);
+    // }
 
     value_cache.insert(state, best_increase);
 
