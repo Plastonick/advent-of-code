@@ -48,11 +48,11 @@ impl Valve {
 struct State {
     position: usize,
     ttl: isize,
-    open_valves: Vec<usize>,
+    open: usize,
 }
 
 pub fn run(_: bool) {
-    let lines = get_lines("day16-test");
+    let lines = get_lines("day16");
 
     let mut name_index_map: HashMap<&str, usize> = HashMap::new();
     for (index, line) in lines.iter().enumerate() {
@@ -72,23 +72,15 @@ pub fn run(_: bool) {
     let start = State {
         position: name_index_map.get("AA").unwrap().to_owned(),
         ttl: time_to_eruption,
-        open_valves: Vec::new(),
+        open: 0,
     };
 
-    let dist = shortest_distance_between(8, 4, &valves, &name_index_map);
-
-    let _matrix = build_distance_matrix(&valves, &name_index_map);
+    let matrix: HashMap<(usize, usize), usize> = build_distance_matrix(&valves);
 
     let mut cache = HashMap::new();
-    let best = get_future_value(start, &valves, &mut cache);
+    let best = get_future_value(start, &valves, &matrix, &mut cache);
 
     println!("Cache size: {}", cache.len());
-
-    // TODO
-
-    // Map out the entire tunnel system and remove any empty valves
-
-    // TODO
 
     println!(
         "Day 16, Part 1: The most I can release in {} minutes is {}",
@@ -99,6 +91,7 @@ pub fn run(_: bool) {
 fn get_future_value(
     state: State,
     valves: &HashMap<usize, Valve>,
+    distances: &HashMap<(usize, usize), usize>,
     value_cache: &mut HashMap<State, isize>,
 ) -> isize {
     // if we've already been in this state before, return how valuable it was last
@@ -107,9 +100,8 @@ fn get_future_value(
     }
 
     let time_expired = state.ttl <= 0;
-    let all_valves_open = state.open_valves.len() == valves.len();
 
-    if time_expired || all_valves_open {
+    if time_expired {
         // the volcano's erupted, we can't improve, I hope I've done enough!
 
         return 0;
@@ -119,35 +111,31 @@ fn get_future_value(
     let at_valve = valves.get(&state.position).unwrap();
     let mut best_increase = 0;
 
+    let bit_mask = 2 << state.position;
+
     // can we open the current valve? Is it worth it?
-    if at_valve.rate > 0 && !state.open_valves.contains(&state.position) {
-        let mut now_open = state.open_valves.clone(); // TODO clone is bad mkay
-        now_open.push(at_valve.index);
-
-        // sort the list, this makes the caching worth it!
-        now_open.sort();
-
+    if at_valve.rate > 0 && (state.open & bit_mask) == 0 {
         // try opening the current state
         let try_state = State {
-            open_valves: now_open,
+            open: state.open + bit_mask,
             ttl: state.ttl - 1,
             position: state.position,
         };
 
-        let future_value = get_future_value(try_state, valves, value_cache);
+        let future_value = get_future_value(try_state, valves, distances, value_cache);
         let valve_open_value = at_valve.rate * (state.ttl - 1);
         best_increase = max(best_increase, valve_open_value + future_value);
     }
 
     // can we go to a different valve?
-    for valve_name in &at_valve.leads_to {
+    for valve_index in &at_valve.leads_to {
         let try_state = State {
-            position: valve_name.to_owned(),
+            position: valve_index.to_owned(),
             ttl: state.ttl - 1,
-            open_valves: state.open_valves.clone(), // TODO clone is bad mkay
+            open: state.open,
         };
 
-        let future_value = get_future_value(try_state, valves, value_cache);
+        let future_value = get_future_value(try_state, valves, distances, value_cache);
         best_increase = max(best_increase, future_value);
     }
 
@@ -156,10 +144,7 @@ fn get_future_value(
     best_increase
 }
 
-fn build_distance_matrix(
-    valves: &HashMap<usize, Valve>,
-    name_map: &HashMap<&str, usize>,
-) -> HashMap<(usize, usize), usize> {
+fn build_distance_matrix(valves: &HashMap<usize, Valve>) -> HashMap<(usize, usize), usize> {
     let mut matrix: HashMap<(usize, usize), usize> = HashMap::new();
 
     for (_, a) in valves {
@@ -169,24 +154,17 @@ fn build_distance_matrix(
                 continue;
             }
 
-            let dist = shortest_distance_between(a.index, b.index, &valves, &name_map);
+            let dist = shortest_distance_between(a.index, b.index, &valves);
 
             matrix.insert((a.index, b.index), dist);
             matrix.insert((b.index, a.index), dist);
         }
     }
 
-    dbg!(&matrix);
-
     matrix
 }
 
-fn shortest_distance_between(
-    a: usize,
-    b: usize,
-    valves: &HashMap<usize, Valve>,
-    name_map: &HashMap<&str, usize>,
-) -> usize {
+fn shortest_distance_between(a: usize, b: usize, valves: &HashMap<usize, Valve>) -> usize {
     let mut dist = 0;
     let mut wave: Vec<&usize> = vec![&a];
     let mut visited = HashSet::new();
@@ -202,7 +180,7 @@ fn shortest_distance_between(
 
         let mut next_wave = Vec::new();
 
-        for indx in wave.pop() {
+        for indx in wave {
             let valve = valves.get(&indx).unwrap();
 
             for neighbour in &valve.leads_to {
@@ -227,20 +205,6 @@ fn shortest_distance_between(
         }
 
         wave = next_wave;
-    }
-
-    print!("No route ");
-
-    for (name, indx) in name_map {
-        if indx == &a {
-            print!("from {} ", name);
-        }
-    }
-
-    for (name, indx) in name_map {
-        if indx == &b {
-            print!("to {}. ", name);
-        }
     }
 
     println!("We should always have a route between any two valves...");
