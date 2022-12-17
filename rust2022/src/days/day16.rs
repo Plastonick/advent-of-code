@@ -108,7 +108,7 @@ fn get_future_value(
         return cache_value.to_owned();
     }
 
-    let time_expired = state.ttl <= 0;
+    let time_expired = state.ttl < 3;
 
     if time_expired {
         // the volcano's erupted, we can't improve, I hope I've done enough!
@@ -149,6 +149,11 @@ fn get_future_value(
         let future_value = get_future_value(try_state, valves, distances, value_cache);
         best_increase = max(best_increase, future_value + (new_ttl * try_valve.rate));
 
+        // always need at least 3 ticks, 1 to move, 1 to open, and 1 to reap the benefits
+        if state.el_ttl < 3 {
+            continue;
+        }
+
         for (_, el_try_valve) in valves {
             // we don't want to open the same valve as the elephant!
             if try_valve.index == el_try_valve.index {
@@ -162,7 +167,7 @@ fn get_future_value(
                 continue;
             }
 
-            let el_distance = distances[&(state.position, el_try_valve.index)];
+            let el_distance = distances[&(state.el_position, el_try_valve.index)];
 
             // do we have time to move here and open the valve and let that valve run for at least 1 tick?
             if state.el_ttl < el_distance + 1 {
