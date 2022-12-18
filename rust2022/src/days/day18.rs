@@ -42,7 +42,7 @@ fn internal_area_of_points(points: &HashSet<(isize, isize, isize)>) -> usize {
     // need to find a point _inside_ the convex hull, and then just path map limited by the hull, find volume
 
     let mut total_surface_area = surface_area_of_points(&points);
-    let mut volume_points = HashSet::new();
+    let mut volume_points: HashSet<(isize, isize, isize)> = HashSet::new();
     let mut outside = HashSet::new();
     let mut limits = [[isize::MAX, isize::MIN]; 3];
 
@@ -65,7 +65,7 @@ fn internal_area_of_points(points: &HashSet<(isize, isize, isize)>) -> usize {
             if let Some(volume) = map_volume(n, points, &mut outside, &limits) {
                 total_surface_area -= surface_area_of_points(&volume);
 
-                volume_points = volume_points.union(&volume).copied().collect();
+                volume_points.extend(&volume);
             }
         }
     }
@@ -96,9 +96,7 @@ fn map_volume(
             for n in neighbours {
                 // we must have started from outside, update the known outside points and return None
                 if is_outside(&n, limits, outside) {
-                    for p in volume {
-                        outside.insert(p);
-                    }
+                    outside.extend(volume);
 
                     return None;
                 }
