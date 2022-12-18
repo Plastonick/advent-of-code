@@ -12,7 +12,7 @@ enum Direction {
 }
 
 pub fn run(_: bool) {
-    let file = get_file_contents("day17-test");
+    let file = get_file_contents("day17");
     let directions = file
         .as_bytes()
         .iter()
@@ -75,55 +75,54 @@ fn height_after_blocks(
     let mut block_num = 0;
     let mut direction_index = 0;
     let mut board: HashSet<(isize, isize)> = HashSet::new();
-    let mut max_height = 0;
+    let mut current_height = 0;
     let mut cache: HashMap<(usize, usize), (isize, usize)> = HashMap::new();
-    let mut cycle_detected = false;
+    let mut height_map: HashMap<usize, isize> = HashMap::new();
+    let mut first_cycle = true;
 
     while block_num < limit {
         let key = (block_num % blocks.len(), direction_index);
 
         // go until we've detected a loop
-        if !cycle_detected {
-            if let Some((height, prev_block_num)) = cache.get(&key) {
-                cycle_detected = true;
-                let cycle_height = max_height - height.to_owned();
+        if let Some((prev_height, prev_block_num)) = cache.get(&key) {
+            if first_cycle {
+                // we want to make sure our cycles have matured!
+                cache.clear();
+                first_cycle = false;
+            } else {
+                let cycle_height = current_height - prev_height.to_owned();
                 let cycle_length = block_num - prev_block_num;
-                let old_max_height = max_height;
 
-                // increase the loop a bunch!
-                let cycles_remaining: usize = ((limit - block_num) / cycle_length) - 1;
-                max_height += cycles_remaining as isize * cycle_height;
-                block_num += cycles_remaining * cycle_length;
+                let num_cycles = (limit - (block_num + 1)) / cycle_length;
+                let remainder_cycles = (limit - (block_num + 1)) % cycle_length;
+                let remainder_height = height_map
+                    .get(&(prev_block_num + remainder_cycles))
+                    .unwrap()
+                    - prev_height;
 
-                // copy the last cycle
-                for y in 0..cycle_height {
-                    for x in 0..7 {
-                        let old_key = (x, old_max_height - y);
-                        let new_key = (x, max_height - y);
+                let total_height =
+                    current_height + (cycle_height * num_cycles as isize) + remainder_height;
 
-                        if board.contains(&old_key) {
-                            board.insert(new_key);
-                        }
-                    }
-                }
+                return total_height;
             }
         }
 
-        (direction_index, max_height) = iterate(
+        cache.insert(key, (current_height, block_num));
+
+        (direction_index, current_height) = iterate(
             block_num,
             direction_index,
-            max_height,
+            current_height,
             &blocks,
             &directions,
             &mut board,
         );
 
-        cache.insert(key, (max_height, block_num));
-
+        height_map.insert(block_num, current_height);
         block_num += 1;
     }
 
-    max_height
+    current_height
 }
 
 fn iterate(
@@ -206,7 +205,7 @@ fn can_exist(
     true
 }
 
-fn print(board: &HashSet<(isize, isize)>) {
+fn _print(board: &HashSet<(isize, isize)>) {
     let mut height = 0;
     let width = 7;
 
