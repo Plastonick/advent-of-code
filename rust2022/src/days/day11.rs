@@ -12,7 +12,11 @@ struct Monkey {
 }
 
 pub fn run(args: &Args) {
-    let file = get_file_contents("day11");
+    let file = if args.test {
+        get_file_contents("day11-test")
+    } else {
+        get_file_contents("day11")
+    };
 
     let monkeys: Vec<Monkey> = file.split("\n\n").map(build_monkey).collect();
     let items: Vec<Vec<usize>> = file.split("\n\n").map(build_items).collect();

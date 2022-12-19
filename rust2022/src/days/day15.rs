@@ -122,7 +122,7 @@ impl Line {
 }
 
 pub fn run(args: &Args) {
-    let (lines, target_row, boundary) = if false {
+    let (lines, target_row, boundary) = if args.test {
         (get_lines("day15-test"), 10, 20)
     } else {
         (get_lines("day15"), 2_000_000, 4_000_000)

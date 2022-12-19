@@ -6,7 +6,11 @@ use std::{
 use crate::{common::get_lines, Args};
 
 pub fn run(args: &Args) {
-    let lines = get_lines("day18");
+    let lines = if args.test {
+        get_lines("day18-test")
+    } else {
+        get_lines("day18")
+    };
 
     let points = lines
         .iter()

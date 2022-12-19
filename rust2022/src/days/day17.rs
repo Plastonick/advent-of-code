@@ -12,7 +12,12 @@ enum Direction {
 }
 
 pub fn run(args: &Args) {
-    let file = get_file_contents("day17");
+    let file = if args.test {
+        get_file_contents("day17-test")
+    } else {
+        get_file_contents("day17")
+    };
+
     let directions = file
         .as_bytes()
         .iter()

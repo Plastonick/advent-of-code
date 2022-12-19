@@ -3,7 +3,12 @@ use std::cmp::Ordering;
 use crate::{common::get_file_contents, Args};
 
 pub fn run(args: &Args) {
-    let file = get_file_contents("day13");
+    let file = if args.test {
+        get_file_contents("day13-test")
+    } else {
+        get_file_contents("day13")
+    };
+
     let pairs: Vec<_> = file
         .split("\n\n")
         .map(|x| x.trim().split_once('\n').unwrap())

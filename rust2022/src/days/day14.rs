@@ -3,7 +3,11 @@ use std::{cmp::max, collections::HashSet};
 use crate::{common::get_lines, Args};
 
 pub fn run(args: &Args) {
-    let lines = get_lines("day14");
+    let lines = if args.test {
+        get_lines("day14-test")
+    } else {
+        get_lines("day14")
+    };
 
     let (mut blocks, max_depth) = build_solid_surfaces(&lines);
 

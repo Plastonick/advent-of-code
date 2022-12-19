@@ -5,7 +5,11 @@ use crate::common::get_lines;
 use crate::Args;
 
 pub fn run(args: &Args) {
-    let lines = get_lines("day10");
+    let lines = if args.test {
+        get_lines("day10-test")
+    } else {
+        get_lines("day10")
+    };
 
     let mut register = 1;
     let mut cycle = 1;

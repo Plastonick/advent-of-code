@@ -3,7 +3,12 @@ use std::collections::{HashMap, HashSet};
 use crate::{common::get_file_contents, Args};
 
 pub fn run(args: &Args) {
-    let file = get_file_contents("day12");
+    let file = if args.test {
+        get_file_contents("day12-test")
+    } else {
+        get_file_contents("day12")
+    };
+
     let width = file.find('\n').unwrap();
 
     let start_pos = unwrap_linear_position(file.find('S').unwrap(), width);

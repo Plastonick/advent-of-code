@@ -53,7 +53,11 @@ struct State {
 }
 
 pub fn run(args: &Args) {
-    let lines = get_lines("day16");
+    let lines = if args.test {
+        get_lines("day16-test")
+    } else {
+        get_lines("day16")
+    };
 
     let mut name_index_map: HashMap<&str, usize> = HashMap::new();
     for (index, line) in lines.iter().enumerate() {
