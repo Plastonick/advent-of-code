@@ -6,6 +6,7 @@ use crate::common::get_lines;
 
 #[derive(Debug)]
 struct Blueprint {
+    index: i32,
     ore: i32,
     clay: i32,
     obsidian: (i32, i32),
@@ -25,38 +26,70 @@ struct State {
     geode_robots: i32,
 }
 
-pub fn run(_: bool) {
-    let lines = get_lines("day19-test");
+static mut GLOBAL_BEST: i32 = 0;
+
+pub fn run(test: bool) {
+    let lines = if test {
+        get_lines("day19-test")
+    } else {
+        get_lines("day19")
+    };
+
     let blueprints = lines.iter().map(build_blueprint).collect::<HashMap<_, _>>();
 
-    // what now?
-    let ttl = 24;
-    let mut quality_level_total = 0;
+    let mut part_1_total = 0;
+    let mut part_2_total = 1;
 
-    for (index, blueprint) in blueprints {
-        let start = State {
-            ttl,
-            ore: 0,
-            ore_robots: 1,
-            clay: 0,
-            clay_robots: 0,
-            obsidian: 0,
-            obsidian_robots: 0,
-            geodes: 0,
-            geode_robots: 0,
-        };
-        let mut cache = HashMap::new();
-        let value = best_value(start, &blueprint, &mut cache);
+    for index in 1..=blueprints.len() {
+        let blueprint = blueprints.get(&(index as i32)).unwrap();
+        let value = best_value_for_ttl(24, &blueprint);
 
-        println!("The quality level of blueprint #{} is {}", index, value);
+        part_1_total += value * blueprint.index;
+    }
 
-        quality_level_total += value * index;
+    for index in 1..=3 {
+        let blueprint = blueprints.get(&index).unwrap();
+        let value = best_value_for_ttl(32, &blueprint);
+
+        part_2_total *= value;
     }
 
     println!(
-        "Day 19, Part 1: Quality level total is {} after {} minutes",
-        quality_level_total, ttl
+        "Day 19, Part 1: Quality level sum is {} after {} minutes",
+        part_1_total, 24
     );
+    println!(
+        "Day 19, Part 2: Quality level product is {} for the first three blueprints after {} minutes",
+        part_2_total, 32
+    );
+}
+
+fn best_value_for_ttl(ttl: i32, blueprint: &Blueprint) -> i32 {
+    unsafe {
+        GLOBAL_BEST = 0;
+    }
+
+    let start = State {
+        ttl,
+        ore: 0,
+        ore_robots: 1,
+        clay: 0,
+        clay_robots: 0,
+        obsidian: 0,
+        obsidian_robots: 0,
+        geodes: 0,
+        geode_robots: 0,
+    };
+    let mut cache = HashMap::new();
+
+    let value = best_value(start, blueprint, &mut cache);
+
+    println!(
+        "Found best value for blueprint #{} with {} ticks: {}",
+        blueprint.index, ttl, value
+    );
+
+    value
 }
 
 fn best_value(state: State, blueprint: &Blueprint, cache: &mut HashMap<State, i32>) -> i32 {
@@ -70,17 +103,25 @@ fn best_value(state: State, blueprint: &Blueprint, cache: &mut HashMap<State, i3
     }
 
     // if we have enough robots to perpetually create geode robots, just do that
-    if state.obsidian_robots >= 12
-        && state.obsidian >= 12
-        && state.ore >= 3
-        && state.ore_robots >= 3
+    if state.obsidian_robots >= blueprint.geode.1
+        && state.obsidian >= blueprint.geode.1
+        && state.ore >= blueprint.geode.0
+        && state.ore_robots >= blueprint.geode.0
     {
-        // geodes we current have
+        // geodes we currently have
         // + geode robots * time left
         // + perpetually creating geode robots and how much they'll harvest
         return state.geodes
             + (state.geode_robots * state.ttl)
             + ((state.ttl * (state.ttl - 1)) / 2);
+    }
+
+    // work out the upper bound for our state, if we have a higher value already then we can trivially return
+    let upper_bound = upper_bound(&state);
+    unsafe {
+        if upper_bound <= GLOBAL_BEST {
+            return 0;
+        }
     }
 
     // each robot will collect 1 piece of its resource
@@ -168,7 +209,18 @@ fn best_value(state: State, blueprint: &Blueprint, cache: &mut HashMap<State, i3
     // cache the best value we could make at this state
     cache.insert(state, best);
 
+    unsafe {
+        GLOBAL_BEST = max(GLOBAL_BEST, best);
+    }
+
     best
+}
+
+// create a sensible upper bound for a current state
+fn upper_bound(state: &State) -> i32 {
+    // one reasonable upper bound is to assume the state can perpetually create new geode robots from this position
+    // the smaller we can make this upper bound, the more efficient our solution will be!
+    return state.geodes + (state.geode_robots * state.ttl) + ((state.ttl * (state.ttl - 1)) / 2);
 }
 
 fn build_blueprint(line: &String) -> (i32, Blueprint) {
@@ -186,6 +238,7 @@ fn build_blueprint(line: &String) -> (i32, Blueprint) {
     (
         index,
         Blueprint {
+            index,
             ore,
             clay,
             obsidian: (obs_1, obs_2),
