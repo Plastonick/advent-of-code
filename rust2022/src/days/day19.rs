@@ -54,25 +54,34 @@ pub fn run(_: bool) {
     }
 
     println!(
-        "Day 19, Part 1: Quality level total is {}",
-        quality_level_total
+        "Day 19, Part 1: Quality level total is {} after {} minutes",
+        quality_level_total, ttl
     );
 }
 
 fn best_value(state: State, blueprint: &Blueprint, cache: &mut HashMap<State, i32>) -> i32 {
-    // if time is up, return the number of geodes we have
-    if state.ttl == 0 {
-        return state.geodes;
-    }
-
     if let Some(value) = cache.get(&state) {
         return value.to_owned();
     }
+    // if we've only got one tick remaining, there's no point building more robots
+    // so just return the number of geodes we have + number of geode robots at this point
+    if state.ttl == 1 {
+        return state.geodes + state.geode_robots;
+    }
 
-    let mut best = 0;
-
-    // permute possible actions and determine best
-    // make sure to include a "do nothing" option to allow for saving resources for a more expensive robot
+    // if we have enough robots to perpetually create geode robots, just do that
+    if state.obsidian_robots >= 12
+        && state.obsidian >= 12
+        && state.ore >= 3
+        && state.ore_robots >= 3
+    {
+        // geodes we current have
+        // + geode robots * time left
+        // + perpetually creating geode robots and how much they'll harvest
+        return state.geodes
+            + (state.geode_robots * state.ttl)
+            + ((state.ttl * (state.ttl - 1)) / 2);
+    }
 
     // each robot will collect 1 piece of its resource
     let ore = state.ore + state.ore_robots;
@@ -81,7 +90,11 @@ fn best_value(state: State, blueprint: &Blueprint, cache: &mut HashMap<State, i3
     let geodes = state.geodes + state.geode_robots;
     let ttl = state.ttl - 1;
 
-    // test creating an ore robot at this stage
+    let mut best = 0;
+
+    // permute possible actions and determine best
+
+    // 1. test creating an ore robot at this stage
     if state.ore >= blueprint.ore {
         let new_state = State {
             ore: ore - blueprint.ore,
@@ -93,10 +106,10 @@ fn best_value(state: State, blueprint: &Blueprint, cache: &mut HashMap<State, i3
             ..state
         };
 
-        best = max(best, best_value(new_state, &blueprint, cache));
+        best = max(best, best_value(new_state, blueprint, cache));
     }
 
-    // test creating a clay robot at this stage
+    // 2. test creating a clay robot at this stage
     if state.ore >= blueprint.clay {
         let new_state = State {
             ore: ore - blueprint.clay,
@@ -108,14 +121,14 @@ fn best_value(state: State, blueprint: &Blueprint, cache: &mut HashMap<State, i3
             ..state
         };
 
-        best = max(best, best_value(new_state, &blueprint, cache));
+        best = max(best, best_value(new_state, blueprint, cache));
     }
 
-    // test creating an obsidian robot at this stage
+    // 3. test creating an obsidian robot at this stage
     if state.ore >= blueprint.obsidian.0 && state.clay >= blueprint.obsidian.1 {
         let new_state = State {
-            ore: state.ore - blueprint.obsidian.0,
-            clay: state.clay - blueprint.obsidian.1,
+            ore: ore - blueprint.obsidian.0,
+            clay: clay - blueprint.obsidian.1,
             obsidian,
             geodes,
             ttl,
@@ -123,25 +136,25 @@ fn best_value(state: State, blueprint: &Blueprint, cache: &mut HashMap<State, i3
             ..state
         };
 
-        best = max(best, best_value(new_state, &blueprint, cache));
+        best = max(best, best_value(new_state, blueprint, cache));
     }
 
-    // test creating a geode robot at this stage
+    // 4. test creating a geode robot at this stage
     if state.ore >= blueprint.geode.0 && state.obsidian >= blueprint.geode.1 {
         let new_state = State {
-            ore: state.ore - blueprint.geode.0,
+            ore: ore - blueprint.geode.0,
             clay,
-            obsidian: state.obsidian - blueprint.geode.1,
+            obsidian: obsidian - blueprint.geode.1,
             geodes,
             ttl,
             geode_robots: state.geode_robots + 1,
             ..state
         };
 
-        best = max(best, best_value(new_state, &blueprint, cache));
+        best = max(best, best_value(new_state, blueprint, cache));
     }
 
-    // test not building any robot
+    // 5. test not building any robot, but still harvesting resources!
     let do_nothing_state = State {
         ore,
         clay,
@@ -150,7 +163,7 @@ fn best_value(state: State, blueprint: &Blueprint, cache: &mut HashMap<State, i3
         ttl,
         ..state
     };
-    best = max(best, best_value(do_nothing_state, &blueprint, cache));
+    best = max(best, best_value(do_nothing_state, blueprint, cache));
 
     // cache the best value we could make at this state
     cache.insert(state, best);
