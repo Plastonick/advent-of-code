@@ -84,11 +84,6 @@ fn best_value_for_ttl(ttl: i32, blueprint: &Blueprint) -> i32 {
 
     let value = best_value(start, blueprint, &mut cache);
 
-    println!(
-        "Found best value for blueprint #{} with {} ticks: {}",
-        blueprint.index, ttl, value
-    );
-
     value
 }
 
