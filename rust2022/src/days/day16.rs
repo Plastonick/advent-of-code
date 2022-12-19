@@ -167,7 +167,6 @@ fn get_future_value(
     }
 
     // add a "do nothing" option where we immediately pass the buck to the other player
-    // try passing the buck to the other player
     if state.players_remaining > 0 {
         let (initial_pos, initial_ttl) = initial;
         let future_value = get_future_value(
