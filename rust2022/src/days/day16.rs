@@ -131,24 +131,7 @@ fn get_future_value(
     let time_expired = state.ttl < 3;
     if time_expired {
         // the volcano's erupted, we can't improve, I hope I've done enough!
-
-        if state.players_remaining > 0 {
-            let (initial_pos, initial_ttl) = initial;
-            return get_future_value(
-                State {
-                    position: initial_pos,
-                    players_remaining: state.players_remaining - 1,
-                    ttl: initial_ttl,
-                    ..state
-                },
-                initial,
-                valves,
-                distances,
-                value_cache,
-            );
-        } else {
-            return 0;
-        }
+        return 0;
     }
 
     // enumerate the possible actions and see what the most valuable action is
@@ -172,8 +155,6 @@ fn get_future_value(
         }
 
         let new_ttl = state.ttl - distance - 1;
-
-        // try with no elephant
         let try_state = State {
             position: try_valve.index,
             ttl: new_ttl,
@@ -183,6 +164,26 @@ fn get_future_value(
 
         let future_value = get_future_value(try_state, initial, valves, distances, value_cache);
         best_increase = max(best_increase, future_value + (new_ttl * try_valve.rate));
+    }
+
+    // add a "do nothing" option where we immediately pass the buck to the other player
+    // try passing the buck to the other player
+    if state.players_remaining > 0 {
+        let (initial_pos, initial_ttl) = initial;
+        let future_value = get_future_value(
+            State {
+                position: initial_pos,
+                players_remaining: state.players_remaining - 1,
+                ttl: initial_ttl,
+                ..state
+            },
+            initial,
+            valves,
+            distances,
+            value_cache,
+        );
+
+        best_increase = max(best_increase, future_value);
     }
 
     value_cache.insert(state, best_increase);
