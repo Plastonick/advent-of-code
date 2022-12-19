@@ -1,6 +1,6 @@
-use crate::common::get_lines;
+use crate::{common::get_lines, Args};
 
-pub fn run(_: bool) {
+pub fn run(args: &Args) {
     let lines = get_lines("day04");
     let mut total = 0;
     let mut captured = 0;
@@ -28,8 +28,10 @@ pub fn run(_: bool) {
         total += 1;
     }
 
-    println!("Day 4, Part 1: Captured {captured} out of a total of {total}");
-    println!("Day 4, Part 2: Overlaps {overlaps} out of a total of {total}");
+    if !args.no_answers {
+        println!("Day 4, Part 1: Captured {captured} out of a total of {total}");
+        println!("Day 4, Part 2: Overlaps {overlaps} out of a total of {total}");
+    }
 }
 
 fn get_range(group: &str) -> (i32, i32) {

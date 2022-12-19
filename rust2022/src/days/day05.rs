@@ -1,11 +1,19 @@
-use crate::common::get_file_contents;
+use crate::{common::get_file_contents, Args};
 
-pub fn run(_: bool) {
-    run_as_part(1);
-    run_as_part(2);
+pub fn run(args: &Args) {
+    for i in [1, 2] {
+        let ans = run_as_part(i);
+
+        if !args.no_answers {
+            println!(
+                "Day 5, Part {}: the first box on each column spells: {}",
+                i, ans
+            );
+        }
+    }
 }
 
-fn run_as_part(part: usize) {
+fn run_as_part(part: usize) -> String {
     let file = get_file_contents("day05");
 
     let parts = file.split("\n\n").take(2).collect::<Vec<&str>>();
@@ -57,8 +65,5 @@ fn run_as_part(part: usize) {
         answer.push(crates[i][0]);
     }
 
-    println!(
-        "Day 5, Part {}: the first box on each column spells: {}",
-        part, answer
-    );
+    answer
 }

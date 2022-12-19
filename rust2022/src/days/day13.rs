@@ -1,8 +1,8 @@
 use std::cmp::Ordering;
 
-use crate::common::get_file_contents;
+use crate::{common::get_file_contents, Args};
 
-pub fn run(_: bool) {
+pub fn run(args: &Args) {
     let file = get_file_contents("day13");
     let pairs: Vec<_> = file
         .split("\n\n")
@@ -37,15 +37,16 @@ pub fn run(_: bool) {
     let div2_index = all_lines.iter().position(|&x| x == "[[2]]").unwrap() + 1;
     let div6_index = all_lines.iter().position(|&x| x == "[[6]]").unwrap() + 1;
 
-    println!(
-        "Day 13, Part 1: The sum of the indices of the ordered pairs is {}",
-        part_1_sum
-    );
-
-    println!(
-        "Day 13, Part 2: The decoder key is {}",
-        div2_index * div6_index
-    );
+    if !args.no_answers {
+        println!(
+            "Day 13, Part 1: The sum of the indices of the ordered pairs is {}",
+            part_1_sum
+        );
+        println!(
+            "Day 13, Part 2: The decoder key is {}",
+            div2_index * div6_index
+        );
+    }
 }
 
 fn compare(left: &str, right: &str) -> Option<bool> {

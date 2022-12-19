@@ -8,7 +8,7 @@ mod days;
 /// Simple program to greet a person
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
-struct Args {
+pub struct Args {
     /// Which day to run
     #[arg(short, long, default_value_t = 1)]
     day: u16,
@@ -18,8 +18,16 @@ struct Args {
     all: bool,
 
     /// Whether to display visual output
-    #[arg(short, long, default_value_t = false)]
+    #[arg(long, default_value_t = false)]
     visual: bool,
+
+    /// Whether to display visual output
+    #[arg(long, default_value_t = false)]
+    no_answers: bool,
+
+    /// Whether to display visual output
+    #[arg(long, default_value_t = false)]
+    test: bool,
 }
 
 fn main() {
@@ -53,7 +61,7 @@ fn main() {
 
         for (day, func) in days.iter().enumerate() {
             let func_start = get_epoch_ms();
-            func(args.visual);
+            func(&args);
             let func_duration = get_epoch_ms() - func_start;
 
             duration_data.push(vec![format!("{}", day + 1), format!("{func_duration:.3}s")]);
@@ -81,7 +89,7 @@ fn main() {
             .position(|(x, _)| (x + 1) as u16 == args.day);
 
         if day.is_some() {
-            days[day.unwrap()](args.visual);
+            days[day.unwrap()](&args);
         } else {
             println!("I haven't done this day yet ;(");
         }

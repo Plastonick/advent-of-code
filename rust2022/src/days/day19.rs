@@ -2,7 +2,7 @@ use std::{cmp::max, collections::HashMap};
 
 use regex::Regex;
 
-use crate::common::get_lines;
+use crate::{common::get_lines, Args};
 
 #[derive(Debug)]
 struct Blueprint {
@@ -28,8 +28,8 @@ struct State {
 
 static mut GLOBAL_BEST: i32 = 0;
 
-pub fn run(test: bool) {
-    let lines = if test {
+pub fn run(args: &Args) {
+    let lines = if args.test {
         get_lines("day19-test")
     } else {
         get_lines("day19")
@@ -54,14 +54,16 @@ pub fn run(test: bool) {
         part_2_total *= value;
     }
 
-    println!(
-        "Day 19, Part 1: Quality level sum is {} after {} minutes",
-        part_1_total, 24
-    );
-    println!(
-        "Day 19, Part 2: Quality level product is {} for the first three blueprints after {} minutes",
-        part_2_total, 32
-    );
+    if !args.no_answers {
+        println!(
+            "Day 19, Part 1: Quality level sum is {} after {} minutes",
+            part_1_total, 24
+        );
+        println!(
+            "Day 19, Part 2: Quality level product is {} for the first three blueprints after {} minutes",
+            part_2_total, 32
+        );
+    }
 }
 
 fn best_value_for_ttl(ttl: i32, blueprint: &Blueprint) -> i32 {

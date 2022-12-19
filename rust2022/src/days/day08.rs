@@ -1,8 +1,8 @@
 use std::cmp::max;
 
-use crate::common::get_lines;
+use crate::{common::get_lines, Args};
 
-pub fn run(_: bool) {
+pub fn run(args: &Args) {
     let lines = get_lines("day08");
 
     let canopy: Vec<Vec<u8>> = lines
@@ -20,15 +20,16 @@ pub fn run(_: bool) {
         }
     }
 
-    println!(
-        "Day 8, Part 1: There are {} trees visible from outside",
-        visible
-    );
-
-    println!(
-        "Day 8, Part 2: The highest scenic score available is {}",
-        max_scenic_score
-    );
+    if !args.no_answers {
+        println!(
+            "Day 8, Part 1: There are {} trees visible from outside",
+            visible
+        );
+        println!(
+            "Day 8, Part 2: The highest scenic score available is {}",
+            max_scenic_score
+        );
+    }
 }
 
 fn is_visible(pos: (usize, usize), canopy: &Vec<Vec<u8>>) -> bool {

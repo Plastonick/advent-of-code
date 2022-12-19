@@ -2,8 +2,9 @@ use std::io::Write;
 use std::{thread, time};
 
 use crate::common::get_lines;
+use crate::Args;
 
-pub fn run(visual: bool) {
+pub fn run(args: &Args) {
     let lines = get_lines("day10");
 
     let mut register = 1;
@@ -25,7 +26,7 @@ pub fn run(visual: bool) {
                 sum_signal_strength += register * cycle;
             }
 
-            if visual {
+            if args.visual {
                 if register - (cycle - (40 * line_num)) <= 0
                     && register - (cycle - (40 * line_num)) >= -2
                 {
@@ -49,11 +50,11 @@ pub fn run(visual: bool) {
         register += add;
     }
 
-    println!(
-        "Day 10, Part 1: The total signal strength is {}",
-        sum_signal_strength
-    );
-    if !visual {
+    if !args.no_answers {
+        println!(
+            "Day 10, Part 1: The total signal strength is {}",
+            sum_signal_strength
+        );
         println!("Day 10, Part 2: This answer requires the --visual flag");
     }
 }

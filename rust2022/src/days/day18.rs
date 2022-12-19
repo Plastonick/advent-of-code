@@ -3,9 +3,9 @@ use std::{
     collections::HashSet,
 };
 
-use crate::common::get_lines;
+use crate::{common::get_lines, Args};
 
-pub fn run(_: bool) {
+pub fn run(args: &Args) {
     let lines = get_lines("day18");
 
     let points = lines
@@ -22,15 +22,16 @@ pub fn run(_: bool) {
         })
         .collect::<HashSet<_>>();
 
-    println!(
-        "Day 18, Part 1: The total exposed surface area of the cubes is {}",
-        surface_area_of_points(&points)
-    );
-
-    println!(
-        "Day 18, Part 2: The total internal volume of the cubes is {}",
-        internal_area_of_points(&points)
-    );
+    if !args.no_answers {
+        println!(
+            "Day 18, Part 1: The total exposed surface area of the cubes is {}",
+            surface_area_of_points(&points)
+        );
+        println!(
+            "Day 18, Part 2: The total internal volume of the cubes is {}",
+            internal_area_of_points(&points)
+        );
+    }
 }
 
 fn internal_area_of_points(points: &HashSet<(isize, isize, isize)>) -> usize {

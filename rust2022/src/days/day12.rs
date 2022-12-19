@@ -1,8 +1,8 @@
 use std::collections::{HashMap, HashSet};
 
-use crate::common::get_file_contents;
+use crate::{common::get_file_contents, Args};
 
-pub fn run(_: bool) {
+pub fn run(args: &Args) {
     let file = get_file_contents("day12");
     let width = file.find('\n').unwrap();
 
@@ -30,19 +30,21 @@ pub fn run(_: bool) {
 
     let part2_distance = solve_map(&mut sources, end_pos, &elevation_map);
 
-    println!(
-        "Day 12, Part 1: Min distance from 'S' point is {}",
-        part1_distance
-    );
-    println!(
-        "Day 12, Part 2: Min distance from any 'a' point is {}",
-        // just in case the original 'S' was closer than any of the actual 'a' points
-        if part2_distance < part1_distance {
-            part2_distance
-        } else {
+    if !args.no_answers {
+        println!(
+            "Day 12, Part 1: Min distance from 'S' point is {}",
             part1_distance
-        }
-    );
+        );
+        println!(
+            "Day 12, Part 2: Min distance from any 'a' point is {}",
+            // just in case the original 'S' was closer than any of the actual 'a' points
+            if part2_distance < part1_distance {
+                part2_distance
+            } else {
+                part1_distance
+            }
+        );
+    }
 }
 
 fn solve_map(

@@ -3,7 +3,7 @@ use std::{
     collections::HashSet,
 };
 
-use crate::common::get_lines;
+use crate::{common::get_lines, Args};
 use regex::{Captures, Regex};
 
 #[derive(Debug)]
@@ -121,7 +121,7 @@ impl Line {
     }
 }
 
-pub fn run(_: bool) {
+pub fn run(args: &Args) {
     let (lines, target_row, boundary) = if false {
         (get_lines("day15-test"), 10, 20)
     } else {
@@ -242,17 +242,18 @@ pub fn run(_: bool) {
         part_1 += 1 + range.1 - range.0;
     }
 
-    println!(
-        "Day 15, Part 1: There are {} confirmed ignored positions on y={}",
-        part_1 - beacons_on_target.len() as isize,
-        target_row
-    );
-
-    if let Some(part_2_point) = beacon_point {
+    if !args.no_answers {
         println!(
-            "Day 15, Part 2: The beacon's frequency is {}",
-            (part_2_point.x * 4_000_000) + part_2_point.y,
+            "Day 15, Part 1: There are {} confirmed ignored positions on y={}",
+            part_1 - beacons_on_target.len() as isize,
+            target_row
         );
+        if let Some(part_2_point) = beacon_point {
+            println!(
+                "Day 15, Part 2: The beacon's frequency is {}",
+                (part_2_point.x * 4_000_000) + part_2_point.y,
+            );
+        }
     }
 }
 

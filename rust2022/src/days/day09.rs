@@ -1,4 +1,5 @@
 use crate::common::get_lines;
+use crate::Args;
 use std::cmp::max;
 use std::collections::HashSet;
 use std::hash::Hash;
@@ -35,7 +36,7 @@ impl DistanceTo for Point {
     }
 }
 
-pub fn run(visual: bool) {
+pub fn run(args: &Args) {
     let lines = get_lines("day09");
 
     let mut head_knot = Point { x: 0, y: 0 };
@@ -60,7 +61,7 @@ pub fn run(visual: bool) {
                 tail_knots[i] = trailing_knot;
             }
 
-            if visual {
+            if args.visual {
                 print_state(&head_knot, &tail_knots);
             }
 
@@ -70,15 +71,16 @@ pub fn run(visual: bool) {
         }
     }
 
-    println!(
-        "Day 9, Part 1: The first tail visits {} unique position",
-        first_tail_positions.len()
-    );
-
-    println!(
-        "Day 9, Part 2: The last tail (of 9) visits {} unique position",
-        last_tail_positions.len()
-    )
+    if !args.no_answers {
+        println!(
+            "Day 9, Part 1: The first tail visits {} unique position",
+            first_tail_positions.len()
+        );
+        println!(
+            "Day 9, Part 2: The last tail (of 9) visits {} unique position",
+            last_tail_positions.len()
+        );
+    }
 }
 
 fn map_command(command: &String) -> (Point, isize) {

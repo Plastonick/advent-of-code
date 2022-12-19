@@ -1,8 +1,8 @@
 use std::{cmp::min, collections::HashMap};
 
-use crate::common::get_lines;
+use crate::{common::get_lines, Args};
 
-pub fn run(_: bool) {
+pub fn run(args: &Args) {
     // ignore the first line, this just centres us at `/`
     let lines = &get_lines("day07")[1..];
 
@@ -99,15 +99,16 @@ pub fn run(_: bool) {
         }
     }
 
-    println!(
-        "Day 7, Part 1: The size of directories less than 100k is {}",
-        part_1_sum
-    );
-
-    println!(
-        "Day 7, Part 2: The smallest path I can delete to free up enough room is {}",
-        smallest_path
-    );
+    if !args.no_answers {
+        println!(
+            "Day 7, Part 1: The size of directories less than 100k is {}",
+            part_1_sum
+        );
+        println!(
+            "Day 7, Part 2: The smallest path I can delete to free up enough room is {}",
+            smallest_path
+        );
+    }
 }
 
 fn is_command(line: &String) -> bool {

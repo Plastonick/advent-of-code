@@ -1,8 +1,8 @@
 use std::collections::HashSet;
 
-use crate::common::get_file_contents;
+use crate::{common::get_file_contents, Args};
 
-pub fn run(_: bool) {
+pub fn run(args: &Args) {
     let buffer = get_file_contents("day06");
 
     let bytes = buffer.as_bytes();
@@ -19,14 +19,16 @@ pub fn run(_: bool) {
         }
     }
 
-    println!(
-        "Day 6, Part 1: The start of packet marker occurs at position {}",
-        start_of_packet
-    );
-    println!(
-        "Day 6, Part 2: The start of message marker occurs at position {}",
-        start_of_message
-    );
+    if !args.no_answers {
+        println!(
+            "Day 6, Part 1: The start of packet marker occurs at position {}",
+            start_of_packet
+        );
+        println!(
+            "Day 6, Part 2: The start of message marker occurs at position {}",
+            start_of_message
+        );
+    }
 }
 
 fn are_unique(characters: &[u8]) -> bool {

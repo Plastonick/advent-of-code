@@ -1,6 +1,6 @@
-use crate::common::get_file_contents;
+use crate::{common::get_file_contents, Args};
 
-pub fn run(_: bool) {
+pub fn run(args: &Args) {
     let input = get_file_contents("day01");
 
     let groups = input.split("\n\n");
@@ -31,6 +31,8 @@ pub fn run(_: bool) {
         .reduce(|x, y| x + y)
         .expect("Uh oh! Can't find calory sum of top three elves");
 
-    println!("Day 1, Part 1: The elf with the largest number of calories has {max}");
-    println!("Day 1, Part 2: The sum of the three most calorific elves is {sum_highest_three}");
+    if !args.no_answers {
+        println!("Day 1, Part 1: The elf with the largest number of calories has {max}");
+        println!("Day 1, Part 2: The sum of the three most calorific elves is {sum_highest_three}");
+    }
 }

@@ -1,6 +1,6 @@
-use crate::common::get_lines;
+use crate::{common::get_lines, Args};
 
-pub fn run(_: bool) {
+pub fn run(args: &Args) {
     let lines = get_lines("day02");
 
     let part_1_score = lines
@@ -15,8 +15,10 @@ pub fn run(_: bool) {
         .reduce(|x, y| x + y)
         .expect("Uh oh! Couldn't score part 2");
 
-    println!("Day 2, Part 1: scores {part_1_score}");
-    println!("Day 2, Part 2: scores {part_2_score}");
+    if !args.no_answers {
+        println!("Day 2, Part 1: scores {part_1_score}");
+        println!("Day 2, Part 2: scores {part_2_score}");
+    }
 }
 
 fn score_part_1(line: &String) -> usize {

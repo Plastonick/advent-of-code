@@ -1,6 +1,6 @@
 use num::integer::lcm;
 
-use crate::common::get_file_contents;
+use crate::{common::get_file_contents, Args};
 
 #[derive(Clone)]
 struct Monkey {
@@ -11,14 +11,16 @@ struct Monkey {
     if_false: usize,
 }
 
-pub fn run(_: bool) {
+pub fn run(args: &Args) {
     let file = get_file_contents("day11");
 
     let monkeys: Vec<Monkey> = file.split("\n\n").map(build_monkey).collect();
     let items: Vec<Vec<usize>> = file.split("\n\n").map(build_items).collect();
 
-    run_for_part(1, &monkeys, &items);
-    run_for_part(2, &monkeys, &items);
+    if !args.no_answers {
+        run_for_part(1, &monkeys, &items);
+        run_for_part(2, &monkeys, &items);
+    }
 }
 
 fn run_for_part(part: u8, monkeys: &Vec<Monkey>, items: &Vec<Vec<usize>>) {

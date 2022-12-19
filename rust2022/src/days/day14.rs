@@ -1,8 +1,8 @@
 use std::{cmp::max, collections::HashSet};
 
-use crate::common::get_lines;
+use crate::{common::get_lines, Args};
 
-pub fn run(_: bool) {
+pub fn run(args: &Args) {
     let lines = get_lines("day14");
 
     let (mut blocks, max_depth) = build_solid_surfaces(&lines);
@@ -41,14 +41,16 @@ pub fn run(_: bool) {
         }
     }
 
-    println!(
-        "Day 14, Part 1: It took {} pieces of sand to start overflowing",
-        sand_pieces - 1
-    );
-    println!(
-        "Day 14, Part 2: It took {} pieces of sand to make a big pyramid",
-        volume
-    );
+    if !args.no_answers {
+        println!(
+            "Day 14, Part 1: It took {} pieces of sand to start overflowing",
+            sand_pieces - 1
+        );
+        println!(
+            "Day 14, Part 2: It took {} pieces of sand to make a big pyramid",
+            volume
+        );
+    }
 }
 
 fn move_sand(

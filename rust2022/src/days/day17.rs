@@ -3,7 +3,7 @@ use std::{
     collections::{HashMap, HashSet},
 };
 
-use crate::common::get_file_contents;
+use crate::{common::get_file_contents, Args};
 
 #[derive(Debug)]
 enum Direction {
@@ -11,7 +11,7 @@ enum Direction {
     Right,
 }
 
-pub fn run(_: bool) {
+pub fn run(args: &Args) {
     let file = get_file_contents("day17");
     let directions = file
         .as_bytes()
@@ -58,12 +58,14 @@ pub fn run(_: bool) {
     for (i, limit) in limits.iter().enumerate() {
         let height = height_after_blocks(limit.to_owned(), &blocks, &directions);
 
-        println!(
-            "Day 17, Part {}: The tetris board is {} units high after {} moves",
-            i + 1,
-            height,
-            limit
-        );
+        if !args.no_answers {
+            println!(
+                "Day 17, Part {}: The tetris board is {} units high after {} moves",
+                i + 1,
+                height,
+                limit
+            );
+        }
     }
 }
 

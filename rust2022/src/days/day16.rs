@@ -5,7 +5,7 @@ use std::{
 
 use regex::Regex;
 
-use crate::common::get_lines;
+use crate::{common::get_lines, Args};
 
 #[derive(Debug)]
 struct Valve {
@@ -52,7 +52,7 @@ struct State {
     open: usize,
 }
 
-pub fn run(_: bool) {
+pub fn run(args: &Args) {
     let lines = get_lines("day16");
 
     let mut name_index_map: HashMap<&str, usize> = HashMap::new();
@@ -105,14 +105,16 @@ pub fn run(_: bool) {
         &mut cache,
     );
 
-    println!(
-        "Day 16, Part 1: The most I can release in 30 minutes is {}",
-        best_solo
-    );
-    println!(
-        "Day 16, Part 2: The most I can release with the elephant in 26 minutes is {}",
-        best_with_elephant
-    );
+    if !args.no_answers {
+        println!(
+            "Day 16, Part 1: The most I can release in 30 minutes is {}",
+            best_solo
+        );
+        println!(
+            "Day 16, Part 2: The most I can release with the elephant in 26 minutes is {}",
+            best_with_elephant
+        );
+    }
 }
 
 fn get_future_value(
