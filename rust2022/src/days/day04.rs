@@ -33,7 +33,7 @@ pub fn run(args: &Args) -> (String, String) {
         println!("Day 4, Part 2: Overlaps {overlaps} out of a total of {total}");
     }
 
-    ("".to_string(), "".to_string())
+    (captured.to_string(), overlaps.to_string())
 }
 
 fn get_range(group: &str) -> (i32, i32) {

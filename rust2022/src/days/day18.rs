@@ -26,18 +26,21 @@ pub fn run(args: &Args) -> (String, String) {
         })
         .collect::<HashSet<_>>();
 
+    let part1 = surface_area_of_points(&points);
+    let part2 = internal_area_of_points(&points);
+
     if !args.no_answers {
         println!(
             "Day 18, Part 1: The total exposed surface area of the cubes is {}",
-            surface_area_of_points(&points)
+            part1
         );
         println!(
             "Day 18, Part 2: The total internal volume of the cubes is {}",
-            internal_area_of_points(&points)
+            part2
         );
     }
 
-    ("".to_string(), "".to_string())
+    (part1.to_string(), part2.to_string())
 }
 
 fn internal_area_of_points(points: &HashSet<(isize, isize, isize)>) -> usize {

@@ -36,5 +36,5 @@ pub fn run(args: &Args) -> (String, String) {
         println!("Day 1, Part 2: The sum of the three most calorific elves is {sum_highest_three}");
     }
 
-    ("".to_string(), "".to_string())
+    (max.to_string(), sum_highest_three.to_string())
 }

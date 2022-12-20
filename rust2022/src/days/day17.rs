@@ -60,8 +60,10 @@ pub fn run(args: &Args) -> (String, String) {
     ];
 
     let limits: [usize; 2] = [2022, 1_000_000_000_000];
+    let mut answers: [isize; 2] = [0, 0];
     for (i, limit) in limits.iter().enumerate() {
         let height = height_after_blocks(limit.to_owned(), &blocks, &directions);
+        answers[i] = height;
 
         if !args.no_answers {
             println!(
@@ -73,7 +75,7 @@ pub fn run(args: &Args) -> (String, String) {
         }
     }
 
-    ("".to_string(), "".to_string())
+    (answers[0].to_string(), answers[1].to_string())
 }
 
 fn height_after_blocks(

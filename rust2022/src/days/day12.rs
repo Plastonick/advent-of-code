@@ -51,7 +51,7 @@ pub fn run(args: &Args) -> (String, String) {
         );
     }
 
-    ("".to_string(), "".to_string())
+    (part1_distance.to_string(), part2_distance.to_string())
 }
 
 fn solve_map(

@@ -31,7 +31,7 @@ pub fn run(args: &Args) -> (String, String) {
         );
     }
 
-    ("".to_string(), "".to_string())
+    (visible.to_string(), max_scenic_score.to_string())
 }
 
 fn is_visible(pos: (usize, usize), canopy: &Vec<Vec<u8>>) -> bool {

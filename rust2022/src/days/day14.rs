@@ -56,7 +56,7 @@ pub fn run(args: &Args) -> (String, String) {
         );
     }
 
-    ("".to_string(), "".to_string())
+    ((sand_pieces - 1).to_string(), volume.to_string())
 }
 
 fn move_sand(

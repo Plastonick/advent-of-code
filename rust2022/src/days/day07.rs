@@ -110,7 +110,7 @@ pub fn run(args: &Args) -> (String, String) {
         );
     }
 
-    ("".to_string(), "".to_string())
+    (part_1_sum.to_string(), smallest_path.to_string())
 }
 
 fn is_command(line: &String) -> bool {

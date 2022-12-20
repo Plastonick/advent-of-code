@@ -20,7 +20,7 @@ pub fn run(args: &Args) -> (String, String) {
         println!("Day 2, Part 2: scores {part_2_score}");
     }
 
-    ("".to_string(), "".to_string())
+    (part_1_score.to_string(), part_2_score.to_string())
 }
 
 fn score_part_1(line: &String) -> usize {

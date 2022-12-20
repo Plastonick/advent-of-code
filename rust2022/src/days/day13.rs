@@ -53,7 +53,10 @@ pub fn run(args: &Args) -> (String, String) {
         );
     }
 
-    ("".to_string(), "".to_string())
+    (
+        part_1_sum.to_string(),
+        (div2_index * div6_index).to_string(),
+    )
 }
 
 fn compare(left: &str, right: &str) -> Option<bool> {

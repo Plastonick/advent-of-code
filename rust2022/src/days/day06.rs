@@ -30,7 +30,7 @@ pub fn run(args: &Args) -> (String, String) {
         );
     }
 
-    ("".to_string(), "".to_string())
+    (start_of_packet.to_string(), start_of_message.to_string())
 }
 
 fn are_unique(characters: &[u8]) -> bool {

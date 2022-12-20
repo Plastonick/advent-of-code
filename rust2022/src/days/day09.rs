@@ -82,7 +82,10 @@ pub fn run(args: &Args) -> (String, String) {
         );
     }
 
-    ("".to_string(), "".to_string())
+    (
+        first_tail_positions.len().to_string(),
+        last_tail_positions.len().to_string(),
+    )
 }
 
 fn map_command(command: &String) -> (Point, isize) {

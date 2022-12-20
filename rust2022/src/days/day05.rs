@@ -1,18 +1,21 @@
 use crate::{common::get_file_contents, Args};
 
 pub fn run(args: &Args) -> (String, String) {
-    for i in [1, 2] {
-        let ans = run_as_part(i);
+    let part1 = run_as_part(1);
+    let part2 = run_as_part(2);
 
-        if !args.no_answers {
-            println!(
-                "Day 5, Part {}: the first box on each column spells: {}",
-                i, ans
-            );
-        }
+    if !args.no_answers {
+        println!(
+            "Day 5, Part 1: the first box on each column spells: {}",
+            part1
+        );
+        println!(
+            "Day 5, Part 2: the first box on each column spells: {}",
+            part2
+        );
     }
 
-    ("".to_string(), "".to_string())
+    (part1.to_string(), part2.to_string())
 }
 
 fn run_as_part(part: usize) -> String {

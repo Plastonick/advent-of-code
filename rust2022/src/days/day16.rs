@@ -120,7 +120,7 @@ pub fn run(args: &Args) -> (String, String) {
         );
     }
 
-    ("".to_string(), "".to_string())
+    (best_solo.to_string(), best_with_elephant.to_string())
 }
 
 fn get_future_value(

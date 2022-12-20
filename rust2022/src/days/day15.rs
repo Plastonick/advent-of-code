@@ -242,21 +242,18 @@ pub fn run(args: &Args) -> (String, String) {
         part_1 += 1 + range.1 - range.0;
     }
 
+    part_1 -= beacons_on_target.len() as isize;
+    let part_2 = (beacon_point.unwrap().x * 4_000_000) + beacon_point.unwrap().y;
+
     if !args.no_answers {
         println!(
             "Day 15, Part 1: There are {} confirmed ignored positions on y={}",
-            part_1 - beacons_on_target.len() as isize,
-            target_row
+            part_1, target_row
         );
-        if let Some(part_2_point) = beacon_point {
-            println!(
-                "Day 15, Part 2: The beacon's frequency is {}",
-                (part_2_point.x * 4_000_000) + part_2_point.y,
-            );
-        }
+        println!("Day 15, Part 2: The beacon's frequency is {}", part_2);
     }
 
-    ("".to_string(), "".to_string())
+    (part_1.to_string(), part_2.to_string())
 }
 
 fn sensor_from_str(string: &String) -> Sensor {

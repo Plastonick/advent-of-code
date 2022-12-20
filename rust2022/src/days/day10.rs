@@ -62,5 +62,5 @@ pub fn run(args: &Args) -> (String, String) {
         println!("Day 10, Part 2: This answer requires the --visual flag");
     }
 
-    ("".to_string(), "".to_string())
+    (sum_signal_strength.to_string(), "n/a".to_string())
 }

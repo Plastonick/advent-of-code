@@ -59,7 +59,7 @@ pub fn run(args: &Args) -> (String, String) {
         );
     }
 
-    ("".to_string(), "".to_string())
+    (part_1_total.to_string(), part_2_total.to_string())
 }
 
 fn best_value_for_ttl(ttl: i32, blueprint: &Blueprint) -> i32 {

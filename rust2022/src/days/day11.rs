@@ -21,15 +21,18 @@ pub fn run(args: &Args) -> (String, String) {
     let monkeys: Vec<Monkey> = file.split("\n\n").map(build_monkey).collect();
     let items: Vec<Vec<usize>> = file.split("\n\n").map(build_items).collect();
 
+    let part1 = run_for_part(1, &monkeys, &items);
+    let part2 = run_for_part(2, &monkeys, &items);
+
     if !args.no_answers {
-        run_for_part(1, &monkeys, &items);
-        run_for_part(2, &monkeys, &items);
+        announce(1, part1);
+        announce(2, part2);
     }
 
-    ("".to_string(), "".to_string())
+    (part1.to_string(), part2.to_string())
 }
 
-fn run_for_part(part: u8, monkeys: &Vec<Monkey>, items: &Vec<Vec<usize>>) {
+fn run_for_part(part: u8, monkeys: &Vec<Monkey>, items: &Vec<Vec<usize>>) -> usize {
     let mut mutable_items = items.clone();
     let mut inspections: Vec<usize> = vec![0; monkeys.len()];
 
@@ -39,7 +42,10 @@ fn run_for_part(part: u8, monkeys: &Vec<Monkey>, items: &Vec<Vec<usize>>) {
         (inspections, mutable_items) = iterate(&monkeys, mutable_items, inspections, part);
     }
 
-    announce(rounds, part, &inspections);
+    inspections.sort();
+    inspections.reverse();
+
+    inspections[0] * inspections[1]
 }
 
 fn iterate(
@@ -138,16 +144,11 @@ fn build_items(monkey_str: &str) -> Vec<usize> {
     starting_items
 }
 
-fn announce(rounds: usize, part: u8, inspections: &Vec<usize>) {
-    let mut mutable_inspections = inspections.clone();
-
-    mutable_inspections.sort();
-    mutable_inspections.reverse();
+fn announce(part: u8, ans: usize) {
+    let rounds = if part == 1 { 20 } else { 10_000 };
 
     println!(
         "Day 11, Part {}: The level of monkey business after {} rounds is {}",
-        part,
-        rounds,
-        mutable_inspections[0] * mutable_inspections[1]
+        part, rounds, ans
     );
 }

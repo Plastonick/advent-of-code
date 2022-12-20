@@ -46,7 +46,7 @@ pub fn run(args: &Args) -> (String, String) {
         println!("Day 3, Part 2: Per-group of three shared items priority sum: {group_sum}");
     }
 
-    ("".to_string(), "".to_string())
+    (line_share_sum.to_string(), group_sum.to_string())
 }
 
 fn byte_priority(byte: u8) -> u32 {
