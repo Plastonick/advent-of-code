@@ -113,8 +113,12 @@ fn best_value(state: State, blueprint: &Blueprint, cache: &mut HashMap<State, i3
     // permute possible actions and determine best
 
     for r in 0..state.robots.len() {
-        // can I create this robot?
+        // should I try and create this robot?
+        if !is_robot_useful(&state, blueprint, r) {
+            continue;
+        }
 
+        // can I create this robot?
         if let Some(new_state) = wait_for_robot(&state, blueprint, r) {
             // I can, if I wait until this state... try it out!
             best = max(best, best_value(new_state, blueprint, cache));
@@ -212,6 +216,22 @@ fn wait_for_robot(state: &State, blueprint: &Blueprint, r: usize) -> Option<Stat
         resources,
         robots,
     })
+}
+
+fn is_robot_useful(state: &State, blueprint: &Blueprint, r: usize) -> bool {
+    // we always want more geode robots
+    if r == 3 {
+        return true;
+    }
+
+    // for the resource this robot collects, what's the maximum any
+    // of the other robots will need of that resource type?
+    let mut max_required = 0;
+    for cost in blueprint.costs {
+        max_required = max(max_required, cost[r]);
+    }
+
+    state.robots[r] < max_required
 }
 
 fn div_ceil(numerator: i32, denominator: i32) -> i32 {
