@@ -190,7 +190,7 @@ fn wait_for_robot(state: &State, blueprint: &Blueprint, r: usize) -> Option<Stat
     wait_time += 1;
 
     // we don't have enough time to wait for this robot _and_ benefit from it
-    if state.ttl < wait_time {
+    if state.ttl < wait_time + 1 {
         return None;
     }
 
