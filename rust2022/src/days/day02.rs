@@ -1,6 +1,6 @@
 use crate::{common::get_lines, Args};
 
-pub fn run(args: &Args) {
+pub fn run(args: &Args) -> (String, String) {
     let lines = get_lines("day02");
 
     let part_1_score = lines
@@ -19,6 +19,8 @@ pub fn run(args: &Args) {
         println!("Day 2, Part 1: scores {part_1_score}");
         println!("Day 2, Part 2: scores {part_2_score}");
     }
+
+    ("".to_string(), "".to_string())
 }
 
 fn score_part_1(line: &String) -> usize {

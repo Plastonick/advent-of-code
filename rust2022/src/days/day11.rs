@@ -11,7 +11,7 @@ struct Monkey {
     if_false: usize,
 }
 
-pub fn run(args: &Args) {
+pub fn run(args: &Args) -> (String, String) {
     let file = if args.test {
         get_file_contents("day11-test")
     } else {
@@ -25,6 +25,8 @@ pub fn run(args: &Args) {
         run_for_part(1, &monkeys, &items);
         run_for_part(2, &monkeys, &items);
     }
+
+    ("".to_string(), "".to_string())
 }
 
 fn run_for_part(part: u8, monkeys: &Vec<Monkey>, items: &Vec<Vec<usize>>) {

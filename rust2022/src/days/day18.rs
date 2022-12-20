@@ -5,7 +5,7 @@ use std::{
 
 use crate::{common::get_lines, Args};
 
-pub fn run(args: &Args) {
+pub fn run(args: &Args) -> (String, String) {
     let lines = if args.test {
         get_lines("day18-test")
     } else {
@@ -36,6 +36,8 @@ pub fn run(args: &Args) {
             internal_area_of_points(&points)
         );
     }
+
+    ("".to_string(), "".to_string())
 }
 
 fn internal_area_of_points(points: &HashSet<(isize, isize, isize)>) -> usize {

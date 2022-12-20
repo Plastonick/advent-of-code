@@ -2,7 +2,7 @@ use std::cmp::max;
 
 use crate::{common::get_lines, Args};
 
-pub fn run(args: &Args) {
+pub fn run(args: &Args) -> (String, String) {
     let lines = get_lines("day08");
 
     let canopy: Vec<Vec<u8>> = lines
@@ -30,6 +30,8 @@ pub fn run(args: &Args) {
             max_scenic_score
         );
     }
+
+    ("".to_string(), "".to_string())
 }
 
 fn is_visible(pos: (usize, usize), canopy: &Vec<Vec<u8>>) -> bool {

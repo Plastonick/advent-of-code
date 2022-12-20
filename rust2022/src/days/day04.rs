@@ -1,6 +1,6 @@
 use crate::{common::get_lines, Args};
 
-pub fn run(args: &Args) {
+pub fn run(args: &Args) -> (String, String) {
     let lines = get_lines("day04");
     let mut total = 0;
     let mut captured = 0;
@@ -32,6 +32,8 @@ pub fn run(args: &Args) {
         println!("Day 4, Part 1: Captured {captured} out of a total of {total}");
         println!("Day 4, Part 2: Overlaps {overlaps} out of a total of {total}");
     }
+
+    ("".to_string(), "".to_string())
 }
 
 fn get_range(group: &str) -> (i32, i32) {

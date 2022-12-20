@@ -2,7 +2,7 @@ use std::{cmp::min, collections::HashMap};
 
 use crate::{common::get_lines, Args};
 
-pub fn run(args: &Args) {
+pub fn run(args: &Args) -> (String, String) {
     // ignore the first line, this just centres us at `/`
     let lines = &get_lines("day07")[1..];
 
@@ -109,6 +109,8 @@ pub fn run(args: &Args) {
             smallest_path
         );
     }
+
+    ("".to_string(), "".to_string())
 }
 
 fn is_command(line: &String) -> bool {

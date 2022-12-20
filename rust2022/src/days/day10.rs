@@ -4,7 +4,7 @@ use std::{thread, time};
 use crate::common::get_lines;
 use crate::Args;
 
-pub fn run(args: &Args) {
+pub fn run(args: &Args) -> (String, String) {
     let lines = if args.test {
         get_lines("day10-test")
     } else {
@@ -61,4 +61,6 @@ pub fn run(args: &Args) {
         );
         println!("Day 10, Part 2: This answer requires the --visual flag");
     }
+
+    ("".to_string(), "".to_string())
 }

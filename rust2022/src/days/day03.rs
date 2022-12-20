@@ -2,7 +2,7 @@ use std::collections::HashSet;
 
 use crate::{common::get_lines, Args};
 
-pub fn run(args: &Args) {
+pub fn run(args: &Args) -> (String, String) {
     let lines = get_lines("day03");
     let mut line_share_sum = 0;
     let mut group_sum = 0;
@@ -45,6 +45,8 @@ pub fn run(args: &Args) {
         println!("Day 3, Part 1: Per-line shared items priority sum: {line_share_sum}");
         println!("Day 3, Part 2: Per-group of three shared items priority sum: {group_sum}");
     }
+
+    ("".to_string(), "".to_string())
 }
 
 fn byte_priority(byte: u8) -> u32 {

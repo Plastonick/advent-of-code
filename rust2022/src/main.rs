@@ -62,10 +62,19 @@ fn main() {
 
         for (day, func) in days.iter().enumerate() {
             let func_start = get_epoch_ms();
-            func(&args);
+            let (part1, part2) = func(&args);
             let func_duration = get_epoch_ms() - func_start;
 
-            duration_data.push(vec![format!("{}", day + 1), format!("{func_duration:.3}s")]);
+            if args.no_answers {
+                duration_data.push(vec![format!("{}", day + 1), format!("{func_duration:.3}s")]);
+            } else {
+                duration_data.push(vec![
+                    format!("{}", day + 1),
+                    format!("{func_duration:.3}s"),
+                    part1,
+                    part2,
+                ]);
+            }
         }
 
         let all_duration = get_epoch_ms() - all_start;
@@ -81,6 +90,16 @@ fn main() {
             .column(1)
             .set_header("Duration")
             .set_align(Align::Right);
+        if !args.no_answers {
+            ascii_table
+                .column(2)
+                .set_header("Part 1")
+                .set_align(Align::Right);
+            ascii_table
+                .column(3)
+                .set_header("Part 2")
+                .set_align(Align::Right);
+        }
 
         ascii_table.print(duration_data);
     } else {

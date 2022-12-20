@@ -1,6 +1,6 @@
 use crate::{common::get_file_contents, Args};
 
-pub fn run(args: &Args) {
+pub fn run(args: &Args) -> (String, String) {
     let input = get_file_contents("day01");
 
     let groups = input.split("\n\n");
@@ -35,4 +35,6 @@ pub fn run(args: &Args) {
         println!("Day 1, Part 1: The elf with the largest number of calories has {max}");
         println!("Day 1, Part 2: The sum of the three most calorific elves is {sum_highest_three}");
     }
+
+    ("".to_string(), "".to_string())
 }

@@ -2,7 +2,7 @@ use std::collections::{HashMap, HashSet};
 
 use crate::{common::get_file_contents, Args};
 
-pub fn run(args: &Args) {
+pub fn run(args: &Args) -> (String, String) {
     let file = if args.test {
         get_file_contents("day12-test")
     } else {
@@ -50,6 +50,8 @@ pub fn run(args: &Args) {
             }
         );
     }
+
+    ("".to_string(), "".to_string())
 }
 
 fn solve_map(

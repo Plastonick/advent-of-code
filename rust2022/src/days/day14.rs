@@ -2,7 +2,7 @@ use std::{cmp::max, collections::HashSet};
 
 use crate::{common::get_lines, Args};
 
-pub fn run(args: &Args) {
+pub fn run(args: &Args) -> (String, String) {
     let lines = if args.test {
         get_lines("day14-test")
     } else {
@@ -55,6 +55,8 @@ pub fn run(args: &Args) {
             volume
         );
     }
+
+    ("".to_string(), "".to_string())
 }
 
 fn move_sand(

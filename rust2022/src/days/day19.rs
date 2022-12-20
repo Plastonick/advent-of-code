@@ -22,7 +22,7 @@ struct State {
 
 static mut GLOBAL_BEST: i32 = 0;
 
-pub fn run(args: &Args) {
+pub fn run(args: &Args) -> (String, String) {
     let lines = if args.test {
         get_lines("day19-test")
     } else {
@@ -58,6 +58,8 @@ pub fn run(args: &Args) {
             part_2_total, 32
         );
     }
+
+    ("".to_string(), "".to_string())
 }
 
 fn best_value_for_ttl(ttl: i32, blueprint: &Blueprint) -> i32 {

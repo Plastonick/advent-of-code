@@ -36,7 +36,7 @@ impl DistanceTo for Point {
     }
 }
 
-pub fn run(args: &Args) {
+pub fn run(args: &Args) -> (String, String) {
     let lines = get_lines("day09");
 
     let mut head_knot = Point { x: 0, y: 0 };
@@ -81,6 +81,8 @@ pub fn run(args: &Args) {
             last_tail_positions.len()
         );
     }
+
+    ("".to_string(), "".to_string())
 }
 
 fn map_command(command: &String) -> (Point, isize) {

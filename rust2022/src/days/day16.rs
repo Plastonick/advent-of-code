@@ -52,7 +52,7 @@ struct State {
     open: usize,
 }
 
-pub fn run(args: &Args) {
+pub fn run(args: &Args) -> (String, String) {
     let lines = if args.test {
         get_lines("day16-test")
     } else {
@@ -119,6 +119,8 @@ pub fn run(args: &Args) {
             best_with_elephant
         );
     }
+
+    ("".to_string(), "".to_string())
 }
 
 fn get_future_value(

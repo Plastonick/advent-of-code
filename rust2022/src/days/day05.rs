@@ -1,6 +1,6 @@
 use crate::{common::get_file_contents, Args};
 
-pub fn run(args: &Args) {
+pub fn run(args: &Args) -> (String, String) {
     for i in [1, 2] {
         let ans = run_as_part(i);
 
@@ -11,6 +11,8 @@ pub fn run(args: &Args) {
             );
         }
     }
+
+    ("".to_string(), "".to_string())
 }
 
 fn run_as_part(part: usize) -> String {

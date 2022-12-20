@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use crate::{common::get_lines, Args};
 
-pub fn run(args: &Args) {
+pub fn run(args: &Args) -> (String, String) {
     let lines = if args.test {
         get_lines("day20-test")
     } else {
@@ -14,16 +14,15 @@ pub fn run(args: &Args) {
         .map(|x| x.parse::<isize>().unwrap())
         .collect::<Vec<_>>();
 
+    let part1 = calc_grove_number(&numbers, 1, 1);
+    let part2 = calc_grove_number(&numbers, 811589153, 10);
+
     if !args.no_answers {
-        println!(
-            "Day 20, Part 1: The Grove Number is {}",
-            calc_grove_number(&numbers, 1, 1)
-        );
-        println!(
-            "Day 20, Part 2: The Larger Grove Number is {}",
-            calc_grove_number(&numbers, 811589153, 10)
-        );
+        println!("Day 20, Part 1: The Grove Number is {}", part1);
+        println!("Day 20, Part 2: The Larger Grove Number is {}", part2);
     }
+
+    (part1.to_string(), part2.to_string())
 }
 
 fn iterate_sequence(

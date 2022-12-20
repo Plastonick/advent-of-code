@@ -121,7 +121,7 @@ impl Line {
     }
 }
 
-pub fn run(args: &Args) {
+pub fn run(args: &Args) -> (String, String) {
     let (lines, target_row, boundary) = if args.test {
         (get_lines("day15-test"), 10, 20)
     } else {
@@ -255,6 +255,8 @@ pub fn run(args: &Args) {
             );
         }
     }
+
+    ("".to_string(), "".to_string())
 }
 
 fn sensor_from_str(string: &String) -> Sensor {

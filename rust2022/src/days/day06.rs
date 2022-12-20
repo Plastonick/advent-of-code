@@ -2,7 +2,7 @@ use std::collections::HashSet;
 
 use crate::{common::get_file_contents, Args};
 
-pub fn run(args: &Args) {
+pub fn run(args: &Args) -> (String, String) {
     let buffer = get_file_contents("day06");
 
     let bytes = buffer.as_bytes();
@@ -29,6 +29,8 @@ pub fn run(args: &Args) {
             start_of_message
         );
     }
+
+    ("".to_string(), "".to_string())
 }
 
 fn are_unique(characters: &[u8]) -> bool {
