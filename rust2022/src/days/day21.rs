@@ -44,12 +44,12 @@ fn find_value(lines: &VecDeque<String>, min: isize, max: isize) -> isize {
 
         let (_, left, right) = solve(&mut lines.clone(), Some(midpoint));
 
-        let target = if target_right { right } else { left };
-        let comparison = if target_right { left } else { right };
+        let target = if target_right { right } else { left } * direction;
+        let comparison = if target_right { left } else { right } * direction;
 
-        if comparison * direction < target * direction {
+        if comparison < target {
             min = midpoint + 1;
-        } else if comparison * direction > target * direction {
+        } else if comparison > target {
             max = midpoint - 1;
         } else {
             return midpoint;
@@ -105,7 +105,8 @@ fn solve(lines: &mut VecDeque<String>, test_value: Option<isize>) -> (isize, isi
                         };
 
                         if name == "root" {
-                            return (value, *operand_one.unwrap(), *operand_two.unwrap());
+                            return (value, *operand_two.unwrap(), *operand_one.unwrap());
+                            // return (value, -*operand_one.unwrap(), -*operand_two.unwrap());
                         }
 
                         monkey_values.insert(name, value);
