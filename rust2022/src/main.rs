@@ -54,6 +54,7 @@ fn main() {
         days::day18::run,
         days::day19::run,
         days::day20::run,
+        days::day21::run,
     ];
 
     if args.all {
