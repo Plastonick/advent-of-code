@@ -57,7 +57,7 @@ fn part2(lines: &mut VecDeque<String>) -> isize {
                         // we know the values! Insert into the list and continue
 
                         let operation = format!(
-                            "({}){}({})",
+                            "({}{}{})",
                             operand_one.unwrap(),
                             operation,
                             operand_two.unwrap()
