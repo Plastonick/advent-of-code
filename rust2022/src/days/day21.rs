@@ -1,12 +1,8 @@
-use std::{
-    collections::{HashMap, VecDeque},
-    fmt::format,
-};
-
 use crate::{common::get_lines, Args};
+use std::collections::{HashMap, VecDeque};
 
 pub fn run(args: &Args) -> (String, String) {
-    let mut lines = if args.test {
+    let lines = if args.test {
         get_lines("day21-test")
     } else {
         get_lines("day21")
@@ -15,75 +11,55 @@ pub fn run(args: &Args) -> (String, String) {
     .map(|x| x.to_owned())
     .collect::<VecDeque<_>>();
 
-    // let part1 = part1(&mut lines.clone());
-    let part2 = part2(&mut lines.clone());
+    let (part1, _, _) = solve(&mut lines.clone(), None);
 
-    ("".to_string(), "".to_string())
+    let shout_out = find_value(&lines, isize::MIN / 256, isize::MAX / 256);
+
+    if !args.no_answers {
+        println!("Day 21, Part 1: Root shouts out {}", part1);
+        println!("Day 21, Part 1: The human should shout out {}", shout_out);
+    }
+
+    (part1.to_string(), shout_out.to_string())
 }
 
-fn part2(lines: &mut VecDeque<String>) -> isize {
-    let mut monkey_values = HashMap::new();
+fn find_value(lines: &VecDeque<String>, min: isize, max: isize) -> isize {
+    let mut min = min;
+    let mut max = max;
 
-    loop {
-        while let Some(line) = lines.pop_front() {
-            let parts = line.split(' ').collect::<Vec<_>>();
+    let (_, left_min, right_min) = solve(&mut lines.clone(), Some(min));
+    let (_, left_max, right_max) = solve(&mut lines.clone(), Some(max));
 
-            // todo handle root and humn cases
+    // figure out if our function is in ascending or descending order, and if our right or left value is fixed
+    let (direction, target_right) = if right_min == right_max {
+        let diff = left_max - left_min;
+        (diff / diff.abs(), true)
+    } else {
+        let diff = right_max - right_min;
+        (diff / diff.abs(), false)
+    };
 
-            match parts.len() {
-                // second part is a number, add it to monkey_values and continue
-                2 => {
-                    let name = String::from(parts[0].strip_suffix(':').unwrap());
-                    let number = if name == "humn" {
-                        "x".to_string()
-                    } else {
-                        parts[1].to_string()
-                    };
+    while min <= max {
+        let midpoint = (min + max) / 2;
 
-                    monkey_values.insert(name, number);
-                }
-                // this monkey needs the values from two other monkeys!
-                4 => {
-                    let name = String::from(parts[0].strip_suffix(':').unwrap());
-                    let monkey_one = String::from(parts[1].to_owned());
-                    let monkey_two = String::from(parts[3].to_owned());
+        let (_, left, right) = solve(&mut lines.clone(), Some(midpoint));
 
-                    let operand_one = monkey_values.get(&monkey_one);
-                    let operand_two = monkey_values.get(&monkey_two);
+        let target = if target_right { right } else { left };
+        let comparison = if target_right { left } else { right };
 
-                    let operation = if name == "root" { "=" } else { parts[2] };
-
-                    if operand_one.is_some() && operand_two.is_some() {
-                        // we know the values! Insert into the list and continue
-
-                        let operation = format!(
-                            "({}{}{})",
-                            operand_one.unwrap(),
-                            operation,
-                            operand_two.unwrap()
-                        );
-
-                        monkey_values.insert(name, operation);
-                    } else {
-                        // add the monkey to the end of the queue to try again
-                        lines.push_back(line);
-                    }
-                }
-                _ => {
-                    panic!("I didn't expect this!")
-                }
-            }
-        }
-
-        if let Some(value) = monkey_values.get("root") {
-            println!("This is the root equation: {}", value);
-
-            panic!();
+        if comparison * direction < target * direction {
+            min = midpoint + 1;
+        } else if comparison * direction > target * direction {
+            max = midpoint - 1;
+        } else {
+            return midpoint;
         }
     }
+
+    panic!("Failed to find target for human to shout");
 }
 
-fn part1(lines: &mut VecDeque<String>) -> isize {
+fn solve(lines: &mut VecDeque<String>, test_value: Option<isize>) -> (isize, isize, isize) {
     let mut monkey_values = HashMap::new();
 
     // iterate over the monkeys, grabbing the monkeys that we can
@@ -95,15 +71,23 @@ fn part1(lines: &mut VecDeque<String>) -> isize {
                 // second part is a number, add it to monkey_values and continue
                 2 => {
                     let name = String::from(parts[0].strip_suffix(':').unwrap());
-                    let number = parts[1].parse::<isize>().unwrap();
+                    let number = if name == "humn" {
+                        if let Some(value) = test_value {
+                            value
+                        } else {
+                            parts[1].parse::<isize>().unwrap()
+                        }
+                    } else {
+                        parts[1].parse::<isize>().unwrap()
+                    };
 
                     monkey_values.insert(name, number);
                 }
                 // this monkey needs the values from two other monkeys!
                 4 => {
-                    let name = String::from(parts[0].strip_suffix(':').unwrap());
-                    let monkey_one = String::from(parts[1].to_owned());
-                    let monkey_two = String::from(parts[3].to_owned());
+                    let name = parts[0].strip_suffix(':').unwrap().to_string();
+                    let monkey_one = parts[1].to_string();
+                    let monkey_two = parts[3].to_string();
 
                     let operand_one = monkey_values.get(&monkey_one);
                     let operand_two = monkey_values.get(&monkey_two);
@@ -120,6 +104,10 @@ fn part1(lines: &mut VecDeque<String>) -> isize {
                             }
                         };
 
+                        if name == "root" {
+                            return (value, *operand_one.unwrap(), *operand_two.unwrap());
+                        }
+
                         monkey_values.insert(name, value);
                     } else {
                         // add the monkey to the end of the queue to try again
@@ -130,10 +118,6 @@ fn part1(lines: &mut VecDeque<String>) -> isize {
                     panic!("I didn't expect this!")
                 }
             }
-        }
-
-        if let Some(value) = monkey_values.get("root") {
-            return *value;
         }
     }
 }
