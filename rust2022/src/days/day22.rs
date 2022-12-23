@@ -1,4 +1,6 @@
 use std::collections::HashMap;
+use std::hash::Hash;
+use std::{thread, time};
 
 use crate::{common::get_file_contents, Args};
 
@@ -49,12 +51,12 @@ impl Direction {
 
 #[derive(Debug, Clone, Copy)]
 enum Face {
-    One,
-    Two,
-    Three,
-    Four,
-    Five,
-    Six,
+    One = 1,
+    Two = 2,
+    Three = 3,
+    Four = 4,
+    Five = 5,
+    Six = 6,
 }
 
 pub fn run(args: &Args) -> (String, String) {
@@ -129,7 +131,8 @@ pub fn run(args: &Args) -> (String, String) {
 
     dbg!(start_point.unwrap());
 
-    let final_p1 = move_player(&start, &commands, &map, &Strategy::Net);
+    // let final_p1 = move_player(&start, &commands, &map, &Strategy::Net);
+    let final_p1 = Player { ..start };
     let final_p2 = move_player(&start, &commands, &map, &Strategy::Cube);
 
     let part1 = password(&final_p1);
@@ -155,6 +158,8 @@ fn move_player(current: &Player, commands: &Vec<String>, map: &Map, strategy: &S
     //     current.position.1 + 1
     // );
 
+    let mut path = HashMap::new();
+
     for command in commands {
         if command == rotate_right {
             current = Player {
@@ -173,8 +178,16 @@ fn move_player(current: &Player, commands: &Vec<String>, map: &Map, strategy: &S
             let units = command.parse::<i32>().unwrap();
 
             // println!("Units: {}", units);
-            current = move_units(current, units, &map, strategy)
+            current = move_units(current, units, &map, strategy, &mut path)
         }
+        let dir_char = match Direction::from_vector(current.direction) {
+            Direction::Down => 'v',
+            Direction::Up => '^',
+            Direction::Right => '>',
+            Direction::Left => '<',
+        };
+
+        path.insert(current.position, dir_char);
 
         // dbg!(&current);
     }
@@ -182,7 +195,13 @@ fn move_player(current: &Player, commands: &Vec<String>, map: &Map, strategy: &S
     current
 }
 
-fn move_units(player: Player, units: i32, map: &Map, strategy: &Strategy) -> Player {
+fn move_units(
+    player: Player,
+    units: i32,
+    map: &Map,
+    strategy: &Strategy,
+    path: &mut HashMap<(i32, i32), char>,
+) -> Player {
     let mut player = player;
 
     for _ in 0..units {
@@ -199,6 +218,17 @@ fn move_units(player: Player, units: i32, map: &Map, strategy: &Strategy) -> Pla
             // else, next position is empty, move and keep going!
             player = next;
         }
+
+        let dir_char = match Direction::from_vector(player.direction) {
+            Direction::Down => 'v',
+            Direction::Up => '^',
+            Direction::Right => '>',
+            Direction::Left => '<',
+        };
+
+        path.insert(player.position, dir_char);
+
+        // _print_map(map, &path);
     }
 
     // println!("Stopped ({}, {})", pos.0 + 1, pos.1 + 1);
@@ -234,20 +264,21 @@ fn add_net(player: Player, map: &Map) -> Player {
 }
 
 fn add_cube(player: Player, map: &Map) -> Player {
-    let face = get_face(player.position);
     let new_pos = (
         player.position.0 + player.direction.0,
         player.position.1 + player.direction.1,
     );
 
     if map.blocks.contains_key(&new_pos) {
-        println!("Found a place");
+        // println!("Found a place");
 
         return Player {
             position: new_pos,
             ..player
         };
     }
+
+    let face = get_face(player.position);
 
     let right = (0, 1);
     let left = (0, -1);
@@ -267,6 +298,16 @@ fn add_cube(player: Player, map: &Map) -> Player {
     let face_6 = (150, 0);
 
     let direction = Direction::from_vector(player.direction);
+
+    println!(
+        "Moving from face ({}, {}), pos ({}, {}), dir ({}, {})",
+        face_top_left.0,
+        face_top_left.1,
+        new_pos.0,
+        new_pos.1,
+        player.direction.0,
+        player.direction.1,
+    );
 
     // We're going off the edge of the net
     // need to find _where_ it should go, then also permute its direction and position
@@ -291,25 +332,24 @@ fn add_cube(player: Player, map: &Map) -> Player {
         }
     };
 
-    dbg!(
-        player.position,
-        direction,
-        target_top_left,
-        target_direction,
-        new_pos
-    );
-
     let new_pos = warp_vector(
-        &Player {
-            position: new_pos,
-            direction: player.direction,
-        },
+        &Player { ..player }, // pretend like we're still in the old face...
         face_top_left,
         target_direction,
         target_top_left,
     );
 
-    dbg!(new_pos);
+    println!(
+        "...to face  ({}, {}), pos ({}, {}), dir ({}, {})",
+        target_top_left.0,
+        target_top_left.1,
+        new_pos.0,
+        new_pos.1,
+        target_direction.0,
+        target_direction.1,
+    );
+
+    // dbg!(new_pos);
     println!();
 
     Player {
@@ -321,32 +361,39 @@ fn add_cube(player: Player, map: &Map) -> Player {
 fn warp_vector(
     player: &Player,
     from_top_left: (i32, i32),
-    to_direction: (i32, i32),
+    target_direction: (i32, i32),
     to_top_left: (i32, i32),
 ) -> (i32, i32) {
     let half_side = 25;
 
-    // move it relative to the origin then reflect it around y = -x,
-    // then move it relative to half it's face around the origin
-    let mut reflected_centered = (
-        (from_top_left.1 - player.position.1) - half_side,
-        (from_top_left.0 - player.position.0) - half_side,
+    // centre to the origin, based on the original face
+    let centered = (
+        player.position.0 - from_top_left.0 - half_side,
+        player.position.1 - from_top_left.1 - half_side,
     );
-    let mut original_direction = (-player.direction.1, -player.direction.0);
 
-    dbg!(player.position, reflected_centered);
+    println!(
+        "Centred ({}, {}) to ({}, {})",
+        player.position.0, player.position.1, centered.0, centered.1
+    );
 
-    // rotate our original position until it matches the target position
-    while original_direction != to_direction {
-        original_direction = rotate_90(original_direction);
-        reflected_centered = rotate_90(reflected_centered);
+    // now reflect in y=-x
+    let mut reflected = (-centered.1, -centered.0);
+
+    // reflect the original direction too, so we can use it as an anchor
+    let original_direction = (-player.direction.1, -player.direction.0);
+    let mut target_direction = target_direction;
+
+    // rotate our original direction until it matches the target direction
+    while original_direction != target_direction {
+        target_direction = rotate_90(target_direction);
+        reflected = rotate_90(reflected);
     }
 
-    dbg!(reflected_centered);
-    // translate our original
+    // translate our original with respect to its _new_ face
     (
-        reflected_centered.0 + half_side + to_top_left.0,
-        reflected_centered.1 + half_side + to_top_left.1,
+        reflected.0 + to_top_left.0 + half_side,
+        reflected.1 + to_top_left.1 + half_side,
     )
 }
 
@@ -373,14 +420,26 @@ fn password(player: &Player) -> i32 {
     ((player.position.0 + 1) * 1000) + ((player.position.1 + 1) * 4) + facing
 }
 
-fn _print_map(map: &Map) {
+fn _print_map(map: &Map, path: &HashMap<(i32, i32), char>) {
+    println!();
+    println!();
+    println!();
+    println!();
+    println!();
+    println!();
+    println!();
+
     for r in 0..map.bounds.0 {
         for c in 0..map.bounds.1 {
-            if let Some(block) = map.blocks.get(&(r, c)) {
+            let point = (r, c);
+
+            if let Some(step) = path.get(&point) {
+                print!("{}", step);
+            } else if let Some(block) = map.blocks.get(&point) {
                 print!(
                     "{}",
                     match block {
-                        Block::Empty => '.',
+                        Block::Empty => ' ',
                         Block::Wall => '#',
                     }
                 );
@@ -388,10 +447,13 @@ fn _print_map(map: &Map) {
                 print!(" ");
             }
         }
-        println!();
+        print!("\n");
     }
 
-    println!("Bounds: {} rows and {} columns", map.bounds.0, map.bounds.1)
+    println!();
+    thread::sleep(time::Duration::from_millis(250));
+
+    // println!("Bounds: {} rows and {} columns", map.bounds.0, map.bounds.1)
 }
 
 fn get_face(pos: (i32, i32)) -> Face {
