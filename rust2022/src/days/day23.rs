@@ -1,6 +1,8 @@
 use std::{
     cmp::{max, min},
     collections::{HashMap, HashSet},
+    hash::{BuildHasher, Hash},
+    ptr::hash,
 };
 
 use crate::{common::get_lines, Args};
@@ -24,27 +26,33 @@ pub fn run(args: &Args) -> (String, String) {
         }
     }
 
-    dbg!(&elves);
+    let mut part1 = 0;
+    let part2;
+    let mut i = 0;
+    loop {
+        let optional_elves = process_round(elves, i);
 
-    let (minimums, maximums) = get_bounds(&elves);
+        if optional_elves.is_some() {
+            if i == 10 {
+                let elf_area = get_area(&optional_elves.clone().unwrap());
+                part1 = elf_area as usize - optional_elves.clone().unwrap().len();
+            }
 
-    dbg!(minimums, maximums);
+            i += 1;
+        } else {
+            part2 = i + 1;
+            break;
+        }
 
-    _print(&elves);
-    for i in 0..10 {
-        elves = process_round(elves, i);
-
-        _print(&elves);
+        elves = optional_elves.unwrap();
     }
-
-    let elf_area = get_area(&elves);
-    let part1 = elf_area as usize - elves.len();
 
     if !args.no_answers {
         println!("Day 23, Part 1: The empty elf space is {}", part1);
+        println!("Day 23, Part 1: The first inactive round is {}", part2);
     }
 
-    (part1.to_string(), "".to_string())
+    (part1.to_string(), part2.to_string())
 }
 
 fn _print(elves: &HashSet<Point>) {
@@ -73,7 +81,7 @@ fn _print(elves: &HashSet<Point>) {
 fn get_area(elves: &HashSet<Point>) -> i32 {
     let (minimums, maximums) = get_bounds(elves);
 
-    (maximums.0 - minimums.0) * (maximums.1 - minimums.1)
+    (1 + maximums.0 - minimums.0) * (1 + maximums.1 - minimums.1)
 }
 
 fn get_bounds(elves: &HashSet<Point>) -> (Point, Point) {
@@ -88,41 +96,47 @@ fn get_bounds(elves: &HashSet<Point>) -> (Point, Point) {
     (minimums, maximums)
 }
 
-fn process_round(elves: HashSet<Point>, round: usize) -> HashSet<Point> {
-    let mut out_elves: HashSet<Point> = HashSet::new();
+fn process_round(elves: HashSet<Point>, round: usize) -> Option<HashSet<Point>> {
+    let mut out_elves = elves.clone();
 
     // round 1, propose moves!
-    let mut proposed: HashMap<Point, Point> = HashMap::new();
-    let mut ghost: HashSet<Point> = HashSet::new();
-    let mut contended: HashSet<Point> = HashSet::new();
+    let mut proposed: HashMap<Point, Vec<Point>> = HashMap::new();
     for elf in &elves {
         // check north
         if let Some(proposal) = propose_move(elf, &elves, round) {
-            proposed.insert(*elf, proposal);
-
-            if ghost.contains(&proposal) {
-                contended.insert(proposal);
+            let mut proposals = if let Some(existing) = proposed.get(&proposal) {
+                existing.clone()
             } else {
-                ghost.insert(proposal);
-            }
+                Vec::new()
+            };
+
+            proposals.push(*elf);
+            proposed.insert(proposal, proposals);
         }
+    }
+
+    if proposed.is_empty() {
+        return None;
     }
 
     // round 2, move if possible
-    for (proposal, elf) in proposed {
-        if contended.contains(&proposal) {
-            // don't move the elf!
-            out_elves.insert(elf);
-        } else {
-            // move the elf!
+    for (proposal, elves) in proposed {
+        if elves.len() == 1 {
+            // a single proposal for this place, move the elf!
             out_elves.insert(proposal);
+            out_elves.remove(&elves[0]);
         }
     }
 
-    elves
+    Some(out_elves)
 }
 
 fn propose_move(point: &Point, elves: &HashSet<Point>, index: usize) -> Option<Point> {
+    // does it need to move?
+    if is_isolated(point, elves) {
+        return None;
+    }
+
     let moves = [move_north, move_south, move_west, move_east];
 
     for i in 0..4 {
@@ -133,6 +147,32 @@ fn propose_move(point: &Point, elves: &HashSet<Point>, index: usize) -> Option<P
     }
 
     None
+}
+
+fn is_isolated(point: &Point, elves: &HashSet<Point>) -> bool {
+    for neighbour in get_neighbours(point) {
+        if elves.contains(&neighbour) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+fn get_neighbours(point: &Point) -> Vec<Point> {
+    let mut neighbours = Vec::new();
+
+    for i in -1..=1 {
+        for j in -1..=1 {
+            if i == 0 && j == 0 {
+                continue;
+            }
+
+            neighbours.push((point.0 + i, point.1 + j));
+        }
+    }
+
+    neighbours
 }
 
 fn move_north(point: &Point, elves: &HashSet<Point>) -> Option<Point> {
