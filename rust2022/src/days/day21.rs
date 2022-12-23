@@ -105,8 +105,7 @@ fn solve(lines: &mut VecDeque<String>, test_value: Option<isize>) -> (isize, isi
                         };
 
                         if name == "root" {
-                            return (value, *operand_two.unwrap(), *operand_one.unwrap());
-                            // return (value, -*operand_one.unwrap(), -*operand_two.unwrap());
+                            return (value, *operand_one.unwrap(), *operand_two.unwrap());
                         }
 
                         monkey_values.insert(name, value);
