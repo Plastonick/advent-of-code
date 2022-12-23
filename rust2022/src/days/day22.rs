@@ -520,3 +520,5 @@ fn get_face(pos: (i32, i32)) -> Face {
 // fn three_to_two_d(pos: (i32, i32, i32)) -> (i32, i32) {
 //     (0, 0)
 // }
+
+// TODO add test cases to help test
