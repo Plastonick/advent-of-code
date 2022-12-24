@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::{cmp::max, collections::HashSet};
 
 use crate::{common::get_lines, Args};
 
@@ -12,7 +12,7 @@ pub fn run(args: &Args) -> (String, String) {
         get_lines("day24")
     };
 
-    let mut wave = HashSet::from_iter(vec![(-1, 0)]);
+    let start = (-1, 0);
     let mut target = (0, 0);
     let mut bounds = HashSet::new();
 
@@ -39,27 +39,49 @@ pub fn run(args: &Args) -> (String, String) {
     bounds.insert((-2, 0));
     bounds.insert((target.0 + 1, target.1));
 
-    // let storm_pos = storms.iter().map(|(p, _)| p).collect::<Vec<_>>();
+    let (part1, storms) = move_between(start, target, storms, &bounds);
 
-    // dbg!(target.0, target.1 + 1);
-    // panic!();
+    let (get_snacks, storms) = move_between(target, start, storms, &bounds);
+    let (return_with_snacks, _) = move_between(start, target, storms, &bounds);
 
+    let part2 = part1 + get_snacks + return_with_snacks;
+
+    if !args.no_answers {
+        println!(
+            "Day 24, Part 1: Takes {} ticks to go from the start to the end",
+            part1
+        );
+        println!(
+            "Day 24, Part 2: Takes {} ticks to go, return for snacks, and go back with snacks",
+            part2
+        );
+    }
+
+    (part1.to_string(), part2.to_string())
+}
+
+fn move_between(
+    start: Point,
+    end: Point,
+    storms: Vec<(Point, Direction)>,
+    bounds: &HashSet<Point>,
+) -> (usize, Vec<(Point, Direction)>) {
     let directions = [(0, 0), (1, 0), (-1, 0), (0, 1), (0, -1)];
 
+    let mut storms = storms;
+    let mut wave = HashSet::from_iter(vec![start]);
     let mut tick = 1;
     'main: loop {
         let mut next_wave = HashSet::new();
 
         // where will the storms be next tick?
-        storms = move_storms(storms, (target.0, target.1 + 1));
+        storms = move_storms(storms, (max(start.0, end.0), max(end.1, start.1) + 1));
 
         // where will a storm be?
         let mut storm_set = HashSet::new();
         for (position, _) in &storms {
             storm_set.insert(position);
         }
-
-        dbg!(storm_set.len());
 
         // find possible next positions
         for point in wave {
@@ -80,9 +102,7 @@ pub fn run(args: &Args) -> (String, String) {
 
                 next_wave.insert(new_point);
 
-                if new_point == target {
-                    println!("Found the target!");
-
+                if new_point == end {
                     break 'main;
                 }
             }
@@ -92,11 +112,7 @@ pub fn run(args: &Args) -> (String, String) {
         wave = next_wave;
     }
 
-    if !args.no_answers {
-        println!("Day 24, Part 1: Takes {} ticks to leave", tick);
-    }
-
-    (tick.to_string(), "".to_string())
+    (tick, storms)
 }
 
 fn move_storms(storms: Vec<(Point, Direction)>, bounds: Point) -> Vec<(Point, Direction)> {
