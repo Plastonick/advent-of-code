@@ -305,16 +305,6 @@ fn add_cube(player: Player, map: &Map) -> Player {
         warped_position.1, /*  + target_direction.1 */
     );
 
-    println!(
-        "...to face  ({}, {}), pos ({}, {}), dir ({}, {})",
-        target_top_left.0,
-        target_top_left.1,
-        new_pos.0,
-        new_pos.1,
-        target_direction.0,
-        target_direction.1,
-    );
-
     // dbg!(new_pos);
     println!();
 
@@ -349,21 +339,21 @@ fn get_target(player: &Player) -> (Position, (i32, i32)) {
 
     // We're going off the edge of the net
     // need to find _where_ it should go, then also permute its direction and position
-    match (direction, face) {
-        (Direction::Left, Face::One) => (face_4, right),
-        (Direction::Up, Face::One) => (face_6, right),
-        (Direction::Up, Face::Two) => (face_6, up),
-        (Direction::Right, Face::Two) => (face_5, left),
-        (Direction::Down, Face::Two) => (face_3, left),
-        (Direction::Left, Face::Three) => (face_4, down),
-        (Direction::Right, Face::Three) => (face_2, up),
-        (Direction::Up, Face::Four) => (face_3, right),
-        (Direction::Left, Face::Four) => (face_1, right),
-        (Direction::Right, Face::Five) => (face_2, left),
-        (Direction::Down, Face::Five) => (face_6, left),
-        (Direction::Left, Face::Six) => (face_1, down),
-        (Direction::Down, Face::Six) => (face_2, down),
-        (Direction::Right, Face::Six) => (face_5, up),
+    match (face, direction) {
+        (Face::One, Direction::Left) => (face_4, right),
+        (Face::One, Direction::Up) => (face_6, right),
+        (Face::Two, Direction::Up) => (face_6, up),
+        (Face::Two, Direction::Right) => (face_5, left),
+        (Face::Two, Direction::Down) => (face_3, left),
+        (Face::Three, Direction::Left) => (face_4, down),
+        (Face::Three, Direction::Right) => (face_2, up),
+        (Face::Four, Direction::Up) => (face_3, right),
+        (Face::Four, Direction::Left) => (face_1, right),
+        (Face::Five, Direction::Right) => (face_2, left),
+        (Face::Five, Direction::Down) => (face_6, left),
+        (Face::Six, Direction::Left) => (face_1, down),
+        (Face::Six, Direction::Down) => (face_2, down),
+        (Face::Six, Direction::Right) => (face_5, up),
         _ => {
             // dbg!(&direction, &face, &new_pos);
             panic!("Unexpected combination!")
@@ -386,32 +376,52 @@ fn warp_vector(
     );
 
     println!(
-        "Centred ({}, {}) to ({}, {})",
+        "Centered ({}, {}) to ({}, {})",
         player.position.0, player.position.1, centered.0, centered.1
     );
 
-    // now reflect in y=-x
-    let mut reflected = (-centered.1, -centered.0);
+    // now reflect the position and original direction around y=-x
+    let mut reflected = reflect_around_y_minus_x(centered);
+    let mut original_direction = reflect_around_y_minus_x(player.direction);
 
-    // reflect the original direction too, so we can use it as an anchor
-    let original_direction = (-player.direction.1, -player.direction.0);
-    let mut target_direction = (-target_direction.0, -target_direction.1);
+    println!("... reflect to ({}, {}) ...", reflected.0, reflected.1);
+
+    // we want to rotate the original until it matches the reverse of the target
+    let target_direction = (-target_direction.0, -target_direction.1);
 
     // rotate our original direction until it matches the target direction
     while original_direction != target_direction {
-        target_direction = rotate_90(target_direction);
+        original_direction = rotate_90(original_direction);
         reflected = rotate_90(reflected);
+
+        println!("... rotated to ({}, {}) ...", reflected.0, reflected.1);
     }
 
     // translate our original with respect to its _new_ face
-    (
+    let translated = (
         reflected.0 + to_top_left.0 + half_side,
         reflected.1 + to_top_left.1 + half_side,
-    )
+    );
+
+    println!(
+        "... to face ({}, {}), pos ({}, {}), dir ({}, {})",
+        to_top_left.0,
+        to_top_left.1,
+        translated.0,
+        translated.1,
+        target_direction.0,
+        target_direction.1,
+    );
+
+    translated
 }
 
 fn rotate_90(vector: Position) -> Position {
     (vector.1, -vector.0)
+}
+
+fn reflect_around_y_minus_x(vector: Position) -> Position {
+    (-vector.1, -vector.0)
 }
 
 fn password(player: &Player) -> i32 {
@@ -481,7 +491,13 @@ fn get_face(pos: (i32, i32)) -> Face {
         (2, 1) => Face::Five,
         (3, 0) => Face::Six,
         _ => {
-            panic!("Unexpected face! ({}, {})", pos.0, pos.1)
+            panic!(
+                "Unexpected face! ({}, {}) in group ({}, {})",
+                pos.0,
+                pos.1,
+                row_group + 1,
+                col_group + 1
+            )
         }
     }
 }
@@ -490,21 +506,58 @@ fn get_face(pos: (i32, i32)) -> Face {
 
 #[test]
 fn test_warp_correctly_translates_vectors() {
-    let player = Player {
-        position: (0, 60),
-        direction: (-1, 0),
-    };
+    for (player, expected) in _warp_test_cases() {
+        let from_top_left = get_face_top_left(&player);
+        let (target_face, target_direction) = get_target(&player);
+        let point = warp_vector(&player, from_top_left, target_direction, target_face);
 
-    let from_top_left = get_face_top_left(&player);
+        assert_eq!(point, expected);
+    }
+}
 
-    assert_eq!(from_top_left, (0, 50));
-
-    let (target_face, target_direction) = get_target(&player);
-
-    assert_eq!(target_face, (150, 0));
-    assert_eq!(target_direction, (0, 1));
-
-    let point = warp_vector(&player, from_top_left, target_direction, target_face);
-
-    assert_eq!(point, (160, 0));
+fn _warp_test_cases() -> Vec<(Player, (i32, i32))> {
+    vec![
+        (
+            Player {
+                position: (0, 50),
+                direction: (-1, 0),
+            },
+            (150, 0),
+        ),
+        (
+            Player {
+                position: (0, 50),
+                direction: (0, -1),
+            },
+            (149, 0),
+        ),
+        (
+            Player {
+                position: (0, 107),
+                direction: (-1, 0),
+            },
+            (200, 7),
+        ),
+        (
+            Player {
+                position: (0, 60),
+                direction: (-1, 0),
+            },
+            (160, 0),
+        ),
+        (
+            Player {
+                position: (57, 99),
+                direction: (0, 1),
+            },
+            (49, 107),
+        ),
+        (
+            Player {
+                position: (100, 99),
+                direction: (0, 1),
+            },
+            (49, 149),
+        ),
+    ]
 }
