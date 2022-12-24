@@ -130,10 +130,7 @@ pub fn run(args: &Args) -> (String, String) {
         direction: (0, 1),
     };
 
-    dbg!(start_point.unwrap());
-
-    // let final_p1 = move_player(&start, &commands, &map, &Strategy::Net);
-    let final_p1 = Player { ..start };
+    let final_p1 = move_player(&start, &commands, &map, &Strategy::Net);
     let final_p2 = move_player(&start, &commands, &map, &Strategy::Cube);
 
     let part1 = password(&final_p1);
@@ -153,12 +150,6 @@ fn move_player(current: &Player, commands: &Vec<String>, map: &Map, strategy: &S
     let rotate_right = &String::from("R");
     let rotate_left = &String::from("L");
 
-    // println!(
-    //     "Moving from... ({}, {})",
-    //     current.position.0 + 1,
-    //     current.position.1 + 1
-    // );
-
     let mut path = HashMap::new();
 
     for command in commands {
@@ -167,18 +158,14 @@ fn move_player(current: &Player, commands: &Vec<String>, map: &Map, strategy: &S
                 direction: (current.direction.1, -current.direction.0),
                 ..current
             };
-            // println!("Rotate RIGHT");
         } else if command == rotate_left {
             current = Player {
                 direction: (-current.direction.1, current.direction.0),
                 ..current
             };
-
-            // println!("Rotate LEFT");
         } else {
             let units = command.parse::<i32>().unwrap();
 
-            // println!("Units: {}", units);
             current = move_units(current, units, &map, strategy, &mut path)
         }
         let dir_char = match Direction::from_vector(current.direction) {
@@ -189,8 +176,6 @@ fn move_player(current: &Player, commands: &Vec<String>, map: &Map, strategy: &S
         };
 
         path.insert(current.position, dir_char);
-
-        // dbg!(&current);
     }
 
     current
@@ -207,8 +192,6 @@ fn move_units(
 
     for _ in 0..units {
         let next = next_pos(Player { ..player }, map, strategy);
-
-        // println!("Moving to... ({}, {})", pos.0 + 1, pos.1 + 1);
 
         let block = map.blocks.get(&next.position).unwrap();
 
@@ -228,11 +211,7 @@ fn move_units(
         };
 
         path.insert(player.position, dir_char);
-
-        // _print_map(map, &path);
     }
-
-    // println!("Stopped ({}, {})", pos.0 + 1, pos.1 + 1);
 
     Player { ..player }
 }
@@ -282,16 +261,6 @@ fn add_cube(player: Player, map: &Map) -> Player {
     let (target_top_left, target_direction) = get_target(&player);
     let face_top_left = get_face_top_left(&player);
 
-    println!(
-        "Moving from face ({}, {}), pos ({}, {}), dir ({}, {})",
-        face_top_left.0,
-        face_top_left.1,
-        new_pos.0,
-        new_pos.1,
-        player.direction.0,
-        player.direction.1,
-    );
-
     // this is our current position warped to the new face, we still need to move in the new direction!
     let warped_position = warp_vector(
         &Player { ..player }, // pretend like we're still in the old face...
@@ -300,13 +269,7 @@ fn add_cube(player: Player, map: &Map) -> Player {
         target_top_left,
     );
 
-    let new_pos = (
-        warped_position.0, /*  + target_direction.0 */
-        warped_position.1, /*  + target_direction.1 */
-    );
-
-    // dbg!(new_pos);
-    println!();
+    let new_pos = (warped_position.0, warped_position.1);
 
     Player {
         position: new_pos,
@@ -365,62 +328,45 @@ fn warp_vector(
     player: &Player,
     from_top_left: Position,
     target_direction: (i32, i32),
-    to_top_left: Position,
+    target_top_left: Position,
 ) -> Position {
-    let half_side = 25;
+    let half_side = 24.5;
 
     // centre to the origin, based on the original face
+    // this lets us rotate that face so we can match its target
     let centered = (
-        player.position.0 - from_top_left.0 - half_side,
-        player.position.1 - from_top_left.1 - half_side,
-    );
-
-    println!(
-        "Centered ({}, {}) to ({}, {})",
-        player.position.0, player.position.1, centered.0, centered.1
+        (player.position.0 - from_top_left.0) as f64 - half_side,
+        (player.position.1 - from_top_left.1) as f64 - half_side,
     );
 
     // now reflect the position and original direction around y=-x
     let mut reflected = reflect_around_y_minus_x(centered);
-    let mut original_direction = reflect_around_y_minus_x(player.direction);
-
-    println!("... reflect to ({}, {}) ...", reflected.0, reflected.1);
+    let mut original_direction =
+        reflect_around_y_minus_x((player.direction.0 as f64, player.direction.1 as f64));
 
     // we want to rotate the original until it matches the reverse of the target
-    let target_direction = (-target_direction.0, -target_direction.1);
+    let target_direction = (-target_direction.0 as f64, -target_direction.1 as f64);
 
     // rotate our original direction until it matches the target direction
     while original_direction != target_direction {
         original_direction = rotate_90(original_direction);
         reflected = rotate_90(reflected);
-
-        println!("... rotated to ({}, {}) ...", reflected.0, reflected.1);
     }
 
     // translate our original with respect to its _new_ face
     let translated = (
-        reflected.0 + to_top_left.0 + half_side,
-        reflected.1 + to_top_left.1 + half_side,
+        (reflected.0 + target_top_left.0 as f64) + 24.5,
+        (reflected.1 + target_top_left.1 as f64) + 24.5,
     );
 
-    println!(
-        "... to face ({}, {}), pos ({}, {}), dir ({}, {})",
-        to_top_left.0,
-        to_top_left.1,
-        translated.0,
-        translated.1,
-        target_direction.0,
-        target_direction.1,
-    );
-
-    translated
+    (translated.0.round() as i32, translated.1.round() as i32)
 }
 
-fn rotate_90(vector: Position) -> Position {
+fn rotate_90(vector: (f64, f64)) -> (f64, f64) {
     (vector.1, -vector.0)
 }
 
-fn reflect_around_y_minus_x(vector: Position) -> Position {
+fn reflect_around_y_minus_x(vector: (f64, f64)) -> (f64, f64) {
     (-vector.1, -vector.0)
 }
 
@@ -434,11 +380,6 @@ fn password(player: &Player) -> i32 {
             panic!("Unexpected direction!")
         }
     };
-
-    // println!(
-    //     "Facing is {} for ({}, {})",
-    //     facing, player.direction.0, player.direction.1
-    // );
 
     ((player.position.0 + 1) * 1000) + ((player.position.1 + 1) * 4) + facing
 }
@@ -457,7 +398,7 @@ fn _print_map(map: &Map, path: &HashMap<(i32, i32), char>) {
             let point = (r, c);
 
             if let Some(step) = path.get(&point) {
-                print!("█");
+                print!("{step}");
             } else if let Some(block) = map.blocks.get(&point) {
                 print!(
                     "{}",
@@ -475,8 +416,6 @@ fn _print_map(map: &Map, path: &HashMap<(i32, i32), char>) {
 
     println!();
     thread::sleep(time::Duration::from_millis(150));
-
-    // println!("Bounds: {} rows and {} columns", map.bounds.0, map.bounds.1)
 }
 
 fn get_face(pos: (i32, i32)) -> Face {
@@ -536,7 +475,7 @@ fn _warp_test_cases() -> Vec<(Player, (i32, i32))> {
                 position: (0, 107),
                 direction: (-1, 0),
             },
-            (200, 7),
+            (199, 7),
         ),
         (
             Player {

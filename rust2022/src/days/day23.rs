@@ -1,8 +1,6 @@
 use std::{
     cmp::{max, min},
     collections::{HashMap, HashSet},
-    hash::{BuildHasher, Hash},
-    ptr::hash,
 };
 
 use crate::{common::get_lines, Args};
