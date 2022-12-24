@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::hash::Hash;
 use std::{thread, time};
 
 use crate::{common::get_file_contents, Args};
@@ -26,6 +25,8 @@ enum Strategy {
     Net,
     Cube,
 }
+
+type Position = (i32, i32);
 
 #[derive(Debug, Clone, Copy)]
 enum Direction {
@@ -269,35 +270,17 @@ fn add_cube(player: Player, map: &Map) -> Player {
         player.position.1 + player.direction.1,
     );
 
+    // if we don't need to wrap at all, trivially return the new posiiton
     if map.blocks.contains_key(&new_pos) {
-        // println!("Found a place");
-
         return Player {
             position: new_pos,
             ..player
         };
     }
 
-    let face = get_face(player.position);
-
-    let right = (0, 1);
-    let left = (0, -1);
-    let down = (1, 0);
-    let up = (-1, 0);
-
-    let row_group = player.position.0 / 50;
-    let col_group = player.position.1 / 50;
-
-    let face_top_left = (row_group * 50, col_group * 50);
-
-    let face_1 = (0, 50);
-    let face_2 = (0, 100);
-    let face_3 = (50, 50);
-    let face_4 = (100, 0);
-    let face_5 = (100, 50);
-    let face_6 = (150, 0);
-
-    let direction = Direction::from_vector(player.direction);
+    // now, find out which face we're currently at, and which face we are going towards
+    let (target_top_left, target_direction) = get_target(&player);
+    let face_top_left = get_face_top_left(&player);
 
     println!(
         "Moving from face ({}, {}), pos ({}, {}), dir ({}, {})",
@@ -309,34 +292,17 @@ fn add_cube(player: Player, map: &Map) -> Player {
         player.direction.1,
     );
 
-    // We're going off the edge of the net
-    // need to find _where_ it should go, then also permute its direction and position
-    let (target_top_left, target_direction) = match (direction, face) {
-        (Direction::Left, Face::One) => (face_4, right),
-        (Direction::Up, Face::One) => (face_6, right),
-        (Direction::Up, Face::Two) => (face_6, up),
-        (Direction::Right, Face::Two) => (face_5, left),
-        (Direction::Down, Face::Two) => (face_3, left),
-        (Direction::Left, Face::Three) => (face_4, down),
-        (Direction::Right, Face::Three) => (face_2, up),
-        (Direction::Up, Face::Four) => (face_3, right),
-        (Direction::Left, Face::Four) => (face_1, right),
-        (Direction::Right, Face::Five) => (face_2, left),
-        (Direction::Down, Face::Five) => (face_6, left),
-        (Direction::Left, Face::Six) => (face_1, down),
-        (Direction::Down, Face::Six) => (face_2, down),
-        (Direction::Right, Face::Six) => (face_5, up),
-        _ => {
-            // dbg!(&direction, &face, &new_pos);
-            panic!("Unexpected combination!")
-        }
-    };
-
-    let new_pos = warp_vector(
+    // this is our current position warped to the new face, we still need to move in the new direction!
+    let warped_position = warp_vector(
         &Player { ..player }, // pretend like we're still in the old face...
         face_top_left,
         target_direction,
         target_top_left,
+    );
+
+    let new_pos = (
+        warped_position.0, /*  + target_direction.0 */
+        warped_position.1, /*  + target_direction.1 */
     );
 
     println!(
@@ -358,12 +324,59 @@ fn add_cube(player: Player, map: &Map) -> Player {
     }
 }
 
+fn get_face_top_left(player: &Player) -> Position {
+    let row_group = player.position.0 / 50;
+    let col_group = player.position.1 / 50;
+
+    (row_group * 50, col_group * 50)
+}
+
+fn get_target(player: &Player) -> (Position, (i32, i32)) {
+    let face = get_face(player.position);
+    let direction = Direction::from_vector(player.direction);
+
+    let right = (0, 1);
+    let left = (0, -1);
+    let down = (1, 0);
+    let up = (-1, 0);
+
+    let face_1 = (0, 50);
+    let face_2 = (0, 100);
+    let face_3 = (50, 50);
+    let face_4 = (100, 0);
+    let face_5 = (100, 50);
+    let face_6 = (150, 0);
+
+    // We're going off the edge of the net
+    // need to find _where_ it should go, then also permute its direction and position
+    match (direction, face) {
+        (Direction::Left, Face::One) => (face_4, right),
+        (Direction::Up, Face::One) => (face_6, right),
+        (Direction::Up, Face::Two) => (face_6, up),
+        (Direction::Right, Face::Two) => (face_5, left),
+        (Direction::Down, Face::Two) => (face_3, left),
+        (Direction::Left, Face::Three) => (face_4, down),
+        (Direction::Right, Face::Three) => (face_2, up),
+        (Direction::Up, Face::Four) => (face_3, right),
+        (Direction::Left, Face::Four) => (face_1, right),
+        (Direction::Right, Face::Five) => (face_2, left),
+        (Direction::Down, Face::Five) => (face_6, left),
+        (Direction::Left, Face::Six) => (face_1, down),
+        (Direction::Down, Face::Six) => (face_2, down),
+        (Direction::Right, Face::Six) => (face_5, up),
+        _ => {
+            // dbg!(&direction, &face, &new_pos);
+            panic!("Unexpected combination!")
+        }
+    }
+}
+
 fn warp_vector(
     player: &Player,
-    from_top_left: (i32, i32),
+    from_top_left: Position,
     target_direction: (i32, i32),
-    to_top_left: (i32, i32),
-) -> (i32, i32) {
+    to_top_left: Position,
+) -> Position {
     let half_side = 25;
 
     // centre to the origin, based on the original face
@@ -382,7 +395,7 @@ fn warp_vector(
 
     // reflect the original direction too, so we can use it as an anchor
     let original_direction = (-player.direction.1, -player.direction.0);
-    let mut target_direction = target_direction;
+    let mut target_direction = (-target_direction.0, -target_direction.1);
 
     // rotate our original direction until it matches the target direction
     while original_direction != target_direction {
@@ -397,8 +410,8 @@ fn warp_vector(
     )
 }
 
-fn rotate_90(vector: (i32, i32)) -> (i32, i32) {
-    (-vector.1, vector.0)
+fn rotate_90(vector: Position) -> Position {
+    (vector.1, -vector.0)
 }
 
 fn password(player: &Player) -> i32 {
@@ -434,12 +447,12 @@ fn _print_map(map: &Map, path: &HashMap<(i32, i32), char>) {
             let point = (r, c);
 
             if let Some(step) = path.get(&point) {
-                print!("{}", step);
+                print!("█");
             } else if let Some(block) = map.blocks.get(&point) {
                 print!(
                     "{}",
                     match block {
-                        Block::Empty => ' ',
+                        Block::Empty => '.',
                         Block::Wall => '#',
                     }
                 );
@@ -451,7 +464,7 @@ fn _print_map(map: &Map, path: &HashMap<(i32, i32), char>) {
     }
 
     println!();
-    thread::sleep(time::Duration::from_millis(250));
+    thread::sleep(time::Duration::from_millis(150));
 
     // println!("Bounds: {} rows and {} columns", map.bounds.0, map.bounds.1)
 }
@@ -473,52 +486,25 @@ fn get_face(pos: (i32, i32)) -> Face {
     }
 }
 
-// fn two_to_three_d(pos: (i32, i32)) -> (i32, i32, i32) {
-//     // which cube face are we on?
-//     let face = if 0 <= pos.0 && pos.0 < 50 {
-//         if pos.1 >= 100 {
-//             1
-//         } else {
-//             2
-//         }
-//     } else if 50 <= pos.0 && pos.0 < 100 {
-//         3
-//     } else if 100 <= pos.0 && pos.0 < 150 {
-//         if pos.1 >= 50 {
-//             4
-//         } else {
-//             5
-//         }
-//     } else {
-//         6
-//     };
-
-//     // map the 2d pos on that cube face to a 3d position
-//     let point = match face {
-//         1 => (pos.0, pos.1 - 50, 0),
-//         2 => (0, 0, pos.0 - 100),
-//         3 => (50, pos.1 - 50, pos.0 - 50),
-//         4 => (0, 0, 0),
-//         5 => (0, 0, 0),
-//         6 => (0, 0, 0),
-//         _ => {
-//             panic!("Unexpected face!")
-//         }
-//     };
-
-//     // make sure we have a valid 3d point
-//     assert!(point.0 >= 0);
-//     assert!(point.1 >= 0);
-//     assert!(point.2 >= 0);
-//     assert!(point.0 < 50);
-//     assert!(point.1 < 50);
-//     assert!(point.2 < 50);
-
-//     point
-// }
-
-// fn three_to_two_d(pos: (i32, i32, i32)) -> (i32, i32) {
-//     (0, 0)
-// }
-
 // TODO add test cases to help test
+
+#[test]
+fn test_warp_correctly_translates_vectors() {
+    let player = Player {
+        position: (0, 60),
+        direction: (-1, 0),
+    };
+
+    let from_top_left = get_face_top_left(&player);
+
+    assert_eq!(from_top_left, (0, 50));
+
+    let (target_face, target_direction) = get_target(&player);
+
+    assert_eq!(target_face, (150, 0));
+    assert_eq!(target_direction, (0, 1));
+
+    let point = warp_vector(&player, from_top_left, target_direction, target_face);
+
+    assert_eq!(point, (160, 0));
+}
