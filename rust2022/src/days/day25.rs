@@ -28,15 +28,15 @@ fn sum_snafu(a: String, b: String) -> String {
     let b_rev = b.chars().rev().collect::<Vec<_>>();
 
     let mut output = String::new();
-    let mut remainder = 0;
+    let mut carry = 0;
 
     for i in 0..=max_order {
-        let a_val = snafu_char_to_val(*a_rev.get(i).unwrap_or(&'0'));
-        let b_val = snafu_char_to_val(*b_rev.get(i).unwrap_or(&'0'));
+        let a_digit = snafu_char_to_val(*a_rev.get(i).unwrap_or(&'0'));
+        let b_digit = snafu_char_to_val(*b_rev.get(i).unwrap_or(&'0'));
 
-        let mut value = remainder + a_val + b_val;
+        let mut value = carry + a_digit + b_digit;
 
-        (remainder, value) = if value > 2 {
+        (carry, value) = if value > 2 {
             (1, value - 5)
         } else if value >= -2 {
             (0, value)
