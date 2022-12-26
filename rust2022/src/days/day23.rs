@@ -31,7 +31,7 @@ pub fn run(args: &Args) -> (String, String) {
         let optional_elves = process_round(elves, i);
 
         if optional_elves.is_some() {
-            if i == 10 {
+            if i == 9 {
                 let elf_area = get_area(&optional_elves.clone().unwrap());
                 part1 = elf_area as usize - optional_elves.clone().unwrap().len();
             }
