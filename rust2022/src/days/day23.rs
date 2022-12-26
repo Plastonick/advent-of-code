@@ -113,6 +113,7 @@ fn process_round(elves: HashSet<Point>, round: usize) -> Option<HashSet<Point>> 
         }
     }
 
+    // if no one has proposed a move, then the elves are necessarily all stationary and won't move again, end!
     if proposed.is_empty() {
         return None;
     }
@@ -135,11 +136,15 @@ fn propose_move(point: &Point, elves: &HashSet<Point>, index: usize) -> Option<P
         return None;
     }
 
-    let moves = [move_north, move_south, move_west, move_east];
+    let directions = [
+        (-1, 0), // north
+        (1, 0),  // south
+        (0, -1), // west
+        (0, 1),  // east
+    ];
 
     for i in 0..4 {
-        // try move
-        if let Some(proposal) = moves[(i + index) % 4](point, elves) {
+        if let Some(proposal) = try_move(point, elves, directions[(i + index) % 4]) {
             return Some(proposal);
         }
     }
@@ -165,62 +170,21 @@ fn is_isolated(point: &Point, elves: &HashSet<Point>) -> bool {
     true
 }
 
-fn move_north(point: &Point, elves: &HashSet<Point>) -> Option<Point> {
-    let north = point.0 - 1;
-    let west = point.1 - 1;
-    let east = point.1 + 1;
+fn try_move(point: &Point, elves: &HashSet<Point>, dir: Point) -> Option<Point> {
+    let proposed = (point.0 + dir.0, point.1 + dir.1);
+    let perp = (dir.1, dir.0); // get some perpendicular vector to the direction vector
 
-    if !(elves.contains(&(north, west))
-        || elves.contains(&(north, point.1))
-        || elves.contains(&(north, east)))
-    {
-        return Some((north, point.1));
+    if elves.contains(&proposed) {
+        return None;
     }
 
-    None
-}
-
-fn move_south(point: &Point, elves: &HashSet<Point>) -> Option<Point> {
-    let south = point.0 + 1;
-    let west = point.1 - 1;
-    let east = point.1 + 1;
-
-    if !(elves.contains(&(south, west))
-        || elves.contains(&(south, point.1))
-        || elves.contains(&(south, east)))
-    {
-        return Some((south, point.1));
+    if elves.contains(&(proposed.0 + perp.0, proposed.1 + perp.1)) {
+        return None;
     }
 
-    None
-}
-
-fn move_west(point: &Point, elves: &HashSet<Point>) -> Option<Point> {
-    let north = point.0 - 1;
-    let south = point.0 + 1;
-    let west = point.1 - 1;
-
-    if !(elves.contains(&(north, west))
-        || elves.contains(&(point.0, west))
-        || elves.contains(&(south, west)))
-    {
-        return Some((point.0, west));
+    if elves.contains(&(proposed.0 - perp.0, proposed.1 - perp.1)) {
+        return None;
     }
 
-    None
-}
-
-fn move_east(point: &Point, elves: &HashSet<Point>) -> Option<Point> {
-    let north = point.0 - 1;
-    let south = point.0 + 1;
-    let east = point.1 + 1;
-
-    if !(elves.contains(&(north, east))
-        || elves.contains(&(point.0, east))
-        || elves.contains(&(south, east)))
-    {
-        return Some((point.0, east));
-    }
-
-    None
+    return Some(proposed);
 }
