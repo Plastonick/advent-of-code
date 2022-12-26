@@ -148,29 +148,21 @@ fn propose_move(point: &Point, elves: &HashSet<Point>, index: usize) -> Option<P
 }
 
 fn is_isolated(point: &Point, elves: &HashSet<Point>) -> bool {
-    for neighbour in get_neighbours(point) {
-        if elves.contains(&neighbour) {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-fn get_neighbours(point: &Point) -> Vec<Point> {
-    let mut neighbours = Vec::new();
-
     for i in -1..=1 {
         for j in -1..=1 {
             if i == 0 && j == 0 {
                 continue;
             }
 
-            neighbours.push((point.0 + i, point.1 + j));
+            let neighbour = (point.0 + i, point.1 + j);
+
+            if elves.contains(&neighbour) {
+                return false;
+            }
         }
     }
 
-    neighbours
+    true
 }
 
 fn move_north(point: &Point, elves: &HashSet<Point>) -> Option<Point> {
