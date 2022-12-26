@@ -28,6 +28,10 @@ pub struct Args {
     /// Whether to display visual output
     #[arg(long, default_value_t = false)]
     test: bool,
+
+    /// Whether to display visual output
+    #[arg(long, default_value_t = false)]
+    time: bool,
 }
 
 fn main() {
@@ -114,7 +118,13 @@ fn main() {
             .position(|(x, _)| (x + 1) as u16 == args.day);
 
         if day.is_some() {
+            let func_start = get_epoch_ms();
             days[day.unwrap()](&args);
+            let func_duration = get_epoch_ms() - func_start;
+
+            if args.time {
+                println!("Calculated in {func_duration:.3}s");
+            }
         } else {
             println!("I haven't done this day yet ;(");
         }
