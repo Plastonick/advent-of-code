@@ -26,23 +26,23 @@ pub fn run(args: &Args) -> (String, String) {
 
     let mut part1 = 0;
     let part2;
-    let mut i = 0;
+    let mut i = 1;
     loop {
         let optional_elves = process_round(elves, i);
 
-        if optional_elves.is_some() {
-            if i == 9 {
-                let elf_area = get_area(&optional_elves.clone().unwrap());
-                part1 = elf_area as usize - optional_elves.clone().unwrap().len();
-            }
-
-            i += 1;
-        } else {
-            part2 = i + 1;
+        if optional_elves.is_none() {
+            part2 = i;
             break;
         }
 
         elves = optional_elves.unwrap();
+
+        if i == 10 {
+            let elf_area = get_area(&elves);
+            part1 = elf_area as usize - elves.len();
+        }
+
+        i += 1;
     }
 
     if !args.no_answers {
@@ -137,10 +137,10 @@ fn propose_move(point: &Point, elves: &HashSet<Point>, index: usize) -> Option<P
     }
 
     let directions = [
+        (0, 1),  // east
         (-1, 0), // north
         (1, 0),  // south
         (0, -1), // west
-        (0, 1),  // east
     ];
 
     for i in 0..4 {
