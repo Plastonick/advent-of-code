@@ -303,18 +303,18 @@ fn upper_bound(
 ) -> usize {
     let mut upper_bound = 0;
 
+    let (ttl, position) = if state.players_remaining > 0 {
+        // we don't really know when the valves could be opened,
+        // so assume they're opened ASAP from the start
+        (state.initial_ttl, state.initial_pos)
+    } else {
+        (state.ttl, state.position)
+    };
+
     for valve in valves {
         if state.is_valve_open(valve) {
             continue;
         }
-
-        let (ttl, position) = if state.players_remaining > 0 {
-            // we don't really know when the valves could be opened,
-            // so assume they're opened ASAP from the start
-            (state.initial_ttl, state.initial_pos)
-        } else {
-            (state.ttl, state.position)
-        };
 
         let distance = distances[&(position, valve.index)];
         let time_to_open = distance + 1;
