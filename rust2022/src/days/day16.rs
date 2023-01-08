@@ -133,6 +133,56 @@ pub fn run(args: &Args) -> (String, String) {
     (best_solo.to_string(), best_with_elephant.to_string())
 }
 
+fn bfs(state: State, valves: &Vec<&Valve>, distances: &HashMap<(usize, usize), usize>) -> usize {
+    let mut wave = vec![state];
+    let mut global_lower_bound = 0;
+
+    loop {
+        for state in wave {
+            let upper_bound = upper_bound(&state, &valves, &distances);
+            let lower_bound = lower_bound(&state, &valves, &distances);
+            global_lower_bound = max(global_lower_bound, lower_bound);
+
+            if upper_bound < global_lower_bound {
+                // this one won't work, skip past it
+                continue;
+            }
+
+            for try_valve in valves {
+                // have I been here?
+                if state.is_valve_open(try_valve) {
+                    // we've already opened this one, no reason to open it again
+                    continue;
+                }
+
+                let distance = distances[&(state.position, try_valve.index)];
+                let time_to_open = distance + 1;
+
+                // do we have time to move here and open the valve and let that valve run for at least 1 tick?
+                if state.ttl <= time_to_open {
+                    // no, don't bother trying this one
+                    continue;
+                }
+
+                let new_ttl = state.ttl - time_to_open;
+                let try_state = State {
+                    position: try_valve.index,
+                    ttl: new_ttl,
+                    open: state.open + (2 << try_valve.index), // "close" the valve we're trying!
+                    ..state
+                };
+
+                let valve_value = new_ttl * try_valve.rate;
+                wave.push(try_state);
+            }
+        }
+
+        break;
+    }
+
+    3
+}
+
 fn get_future_value(
     state: State,
     curr_value: usize,
@@ -329,4 +379,39 @@ fn upper_bound(
     }
 
     upper_bound
+}
+
+fn lower_bound(
+    state: &State,
+    valves: &Vec<&Valve>,
+    distances: &HashMap<(usize, usize), usize>,
+) -> usize {
+    let mut lower_bound = 0;
+
+    let (ttl, position) = if state.players_remaining > 0 {
+        // we don't really know when the valves could be opened,
+        // so assume they're opened ASAP from the start
+        (state.initial_ttl, state.initial_pos)
+    } else {
+        (state.ttl, state.position)
+    };
+
+    for valve in valves {
+        if state.is_valve_open(valve) {
+            continue;
+        }
+
+        let distance = distances[&(position, valve.index)];
+        let time_to_open = distance + 1;
+
+        if ttl <= time_to_open {
+            continue;
+        }
+
+        let new_ttl = ttl - time_to_open;
+
+        lower_bound += max(new_ttl * valve.rate, lower_bound);
+    }
+
+    lower_bound
 }
