@@ -1,4 +1,3 @@
 .DS_Store
 .vscode
-rust2015/target
-rust2022/target
+rust*/target
