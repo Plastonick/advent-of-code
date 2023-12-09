@@ -1,13 +1,14 @@
 use crate::common::get_lines;
 use crate::Args;
 use regex::Regex;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 struct Number {
     value: isize,
     row: isize,
-    columns: Vec<isize>,
+    column_start: isize,
+    column_end: isize,
 }
 
 pub fn run(args: &Args) -> (String, String) {
@@ -18,36 +19,56 @@ pub fn run(args: &Args) -> (String, String) {
     };
 
     let symbol_locations = get_symbol_locations(&lines);
+    let star_locations = get_star_locations(&lines);
     let numbers = get_numbers(&lines);
-
-    // dbg!(&numbers);
 
     let part_number_sum: isize = numbers
         .iter()
-        .filter(|&x| is_included(x, &symbol_locations))
+        .filter(|&x| adjacent_symbol(x, &symbol_locations).is_some())
         .map(|x| x.value)
         .sum();
 
+    let gear_ratio_sum = numbers
+        .iter()
+        .map(|x| (x, adjacent_symbol(x, &star_locations)))
+        .filter_map(|(&x, star_opt)| match star_opt {
+            Some(star) => Some((x, star)),
+            None => None,
+        })
+        .fold(HashMap::new(), |mut acc, (x, star)| {
+            acc.entry(star).or_insert_with(Vec::new).push(x);
+            acc
+        })
+        .iter()
+        .filter_map(|(_, numbers)| {
+            if numbers.len() == 2 {
+                Some(numbers.iter().map(|x| x.value).product::<isize>())
+            } else {
+                None
+            }
+        })
+        .sum::<isize>();
+
     if !args.no_answers {
         println!("Day 3, Part 1: The part number sum is {part_number_sum}");
-        println!("Day 3, Part 2: TODO");
+        println!("Day 3, Part 2: The gear ratio sum is {gear_ratio_sum}");
     }
 
-    ("".to_string(), "".to_string())
+    (part_number_sum.to_string(), gear_ratio_sum.to_string())
 }
 
-fn is_included(number: &Number, symbols: &HashSet<(isize, isize)>) -> bool {
+fn adjacent_symbol(number: &Number, symbols: &HashSet<(isize, isize)>) -> Option<(isize, isize)> {
     for i in -1..=1 {
         for j in -1..=1 {
-            for col in &number.columns {
+            for col in number.column_start..number.column_end {
                 if symbols.contains(&(number.row + i, col + j)) {
-                    return true;
+                    return Some((number.row + i, col + j));
                 }
             }
         }
     }
 
-    false
+    None
 }
 
 fn get_symbol_locations(lines: &Vec<String>) -> HashSet<(isize, isize)> {
@@ -58,6 +79,20 @@ fn get_symbol_locations(lines: &Vec<String>) -> HashSet<(isize, isize)> {
             line.chars()
                 .enumerate()
                 .filter(|(_, char)| is_special_char(*char))
+                .map(move |(col, _)| (row as isize, col as isize))
+        })
+        .flatten()
+        .collect::<HashSet<_>>()
+}
+
+fn get_star_locations(lines: &Vec<String>) -> HashSet<(isize, isize)> {
+    lines
+        .iter()
+        .enumerate()
+        .map(|(row, line)| {
+            line.chars()
+                .enumerate()
+                .filter(|(_, char)| *char == '*')
                 .map(move |(col, _)| (row as isize, col as isize))
         })
         .flatten()
@@ -90,7 +125,8 @@ fn get_numbers_from_line(row: usize, line: &String) -> Vec<Number> {
             Some(Number {
                 value: digits.as_str().parse::<isize>().unwrap(),
                 row: row as isize,
-                columns: digits.range().map(|x| x as isize).collect::<Vec<isize>>(),
+                column_start: digits.start() as isize,
+                column_end: digits.end() as isize,
             })
         })
         .collect::<Vec<_>>()
