@@ -1,7 +1,9 @@
 use crate::common::get_lines;
 use crate::Args;
+use regex::Regex;
 use std::collections::HashSet;
 
+#[derive(Debug)]
 struct Number {
     value: isize,
     row: isize,
@@ -18,6 +20,8 @@ pub fn run(args: &Args) -> (String, String) {
     let symbol_locations = get_symbol_locations(&lines);
     let numbers = get_numbers(&lines);
 
+    // dbg!(&numbers);
+
     let part_number_sum: isize = numbers
         .iter()
         .filter(|&x| is_included(x, &symbol_locations))
@@ -26,6 +30,7 @@ pub fn run(args: &Args) -> (String, String) {
 
     if !args.no_answers {
         println!("Day 3, Part 1: The part number sum is {part_number_sum}");
+        println!("Day 3, Part 2: TODO");
     }
 
     ("".to_string(), "".to_string())
@@ -68,13 +73,25 @@ fn is_special_char(c: char) -> bool {
 }
 
 fn get_numbers(lines: &Vec<String>) -> Vec<Number> {
-    // lines]
+    lines
+        .iter()
+        .enumerate()
+        .map(|(row, line)| get_numbers_from_line(row, line))
+        .flatten()
+        .collect()
+}
 
-    // let _foo = lines.iter().map()
+fn get_numbers_from_line(row: usize, line: &String) -> Vec<Number> {
+    let regex = Regex::new(r"(\d+)").unwrap();
 
-    vec![Number {
-        value: 467,
-        row: 0,
-        columns: vec![0, 1, 2],
-    }]
+    regex
+        .find_iter(line)
+        .filter_map(|digits| {
+            Some(Number {
+                value: digits.as_str().parse::<isize>().unwrap(),
+                row: row as isize,
+                columns: digits.range().map(|x| x as isize).collect::<Vec<isize>>(),
+            })
+        })
+        .collect::<Vec<_>>()
 }
