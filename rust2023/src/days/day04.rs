@@ -64,7 +64,7 @@ pub fn run(args: &Args) -> (String, String) {
         println!("Day 4, Part 2: The total number of won cards is {total_cards}");
     }
 
-    (part_1_value.to_string(), "".to_string())
+    (part_1_value.to_string(), total_cards.to_string())
 }
 
 fn to_card(line: &String) -> Card {
