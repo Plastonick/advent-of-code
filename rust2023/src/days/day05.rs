@@ -47,7 +47,10 @@ pub fn run(args: &Args) -> (String, String) {
         println!("Day 5, Part 2: The lowest location of the ranges is {lowest_location_of_ranges}");
     }
 
-    (lowest_location.to_string(), "".to_string())
+    (
+        lowest_location.to_string(),
+        lowest_location_of_ranges.to_string(),
+    )
 }
 
 fn map_to_location(source: i128, maps: &Vec<Map>) -> i128 {
@@ -189,7 +192,7 @@ fn build_maps(file: String) -> (Vec<i128>, Vec<Map>) {
 #[test]
 fn test_intersections() {
     for (seeds, translation, expected) in _range_samples() {
-        assert_eq!(expected, translate_range(&seeds, &translation));
+        assert_eq!(expected, translate_range(seeds, &translation));
     }
 }
 
