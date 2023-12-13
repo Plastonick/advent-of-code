@@ -20,8 +20,8 @@ pub fn run(args: &Args) -> (String, String) {
         })
         .collect::<Vec<(Vec<char>, usize)>>();
 
-    let part_1_winnings = get_winnings(&cards, score);
-    let part_2_winnings = get_winnings(&cards, score_as_joker);
+    let part_1_winnings = get_winnings(&cards, score_regular);
+    let part_2_winnings = get_winnings(&cards, score_with_joker);
 
     if !args.no_answers {
         println!("Day 7, Part 1: {part_1_winnings}");
@@ -31,20 +31,16 @@ pub fn run(args: &Args) -> (String, String) {
     (part_1_winnings.to_string(), part_2_winnings.to_string())
 }
 
-fn get_winnings(cards: &Vec<(Vec<char>, usize)>, scoring: fn(&Vec<char>) -> usize) -> usize {
+fn get_winnings(
+    cards: &Vec<(Vec<char>, usize)>,
+    scoring_strategy: fn(&Vec<char>) -> usize,
+) -> usize {
     let mut ranked_card = cards
         .iter()
-        .map(|(hand, bid)| (scoring(&hand), hand, bid))
+        .map(|(hand, bid)| (scoring_strategy(&hand), hand, bid))
         .collect::<Vec<_>>();
 
     ranked_card.sort_by(|(a_rank, _, _), (b_rank, _, _)| a_rank.cmp(b_rank));
-
-    let sorted = ranked_card
-        .iter()
-        .map(|(x, y, z)| format!("{} - {}", y.iter().collect::<String>(), x))
-        .collect::<Vec<_>>();
-
-    dbg!(sorted);
 
     ranked_card
         .iter()
@@ -53,7 +49,7 @@ fn get_winnings(cards: &Vec<(Vec<char>, usize)>, scoring: fn(&Vec<char>) -> usiz
         .sum()
 }
 
-fn score(cards: &Vec<char>) -> usize {
+fn score_regular(cards: &Vec<char>) -> usize {
     let trick: usize = count_types(&cards).values().map(|v| v * v).sum();
 
     let best_card_value: usize = cards
@@ -72,7 +68,7 @@ fn count_types(cards: &Vec<char>) -> HashMap<&char, usize> {
     })
 }
 
-fn score_as_joker(cards: &Vec<char>) -> usize {
+fn score_with_joker(cards: &Vec<char>) -> usize {
     let mut card_counts = count_types(&cards);
     let best_non_joker = card_counts
         .iter()
@@ -90,13 +86,15 @@ fn score_as_joker(cards: &Vec<char>) -> usize {
 
     let trick: usize = card_counts.values().map(|v| v * v).sum();
 
-    let best_card_value: usize = cards
+    // essentially represents the cards as a base-15 number, which can then be directly compared
+    let best_card_ranking_value: usize = cards
         .iter()
         .enumerate()
         .map(|(i, r)| 15_usize.pow((4 - i) as u32) * card_val_2(&r))
         .sum();
 
-    trick * 15_usize.pow(5) + best_card_value
+    // the "trick" i.e. pair, two pair, etc. is the highest order digit.
+    trick * 15_usize.pow(5) + best_card_ranking_value
 }
 
 fn card_val(card: &char) -> usize {
