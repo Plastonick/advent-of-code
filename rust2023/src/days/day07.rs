@@ -1,7 +1,6 @@
 use crate::common::get_lines;
 use crate::Args;
 use std::collections::HashMap;
-use std::fmt::format;
 
 pub fn run(args: &Args) -> (String, String) {
     let lines = if args.test {
@@ -19,11 +18,23 @@ pub fn run(args: &Args) -> (String, String) {
                 rank.parse::<usize>().unwrap(),
             )
         })
-        .collect::<Vec<_>>();
+        .collect::<Vec<(Vec<char>, usize)>>();
 
+    let part_1_winnings = get_winnings(&cards, score);
+    let part_2_winnings = get_winnings(&cards, score_as_joker);
+
+    if !args.no_answers {
+        println!("Day 7, Part 1: {part_1_winnings}");
+        println!("Day 7, Part 2: {part_2_winnings}");
+    }
+
+    (part_1_winnings.to_string(), part_2_winnings.to_string())
+}
+
+fn get_winnings(cards: &Vec<(Vec<char>, usize)>, scoring: fn(&Vec<char>) -> usize) -> usize {
     let mut ranked_card = cards
         .iter()
-        .map(|(hand, bid)| (score_as_joker(&hand), hand, bid))
+        .map(|(hand, bid)| (scoring(&hand), hand, bid))
         .collect::<Vec<_>>();
 
     ranked_card.sort_by(|(a_rank, _, _), (b_rank, _, _)| a_rank.cmp(b_rank));
@@ -35,18 +46,11 @@ pub fn run(args: &Args) -> (String, String) {
 
     dbg!(sorted);
 
-    let part_1_score: usize = ranked_card
+    ranked_card
         .iter()
         .enumerate()
         .map(|(rank, (_, _, &bid))| (rank + 1) * bid)
-        .sum();
-
-    if !args.no_answers {
-        println!("Day 7, Part 1: {part_1_score}");
-        println!("Day 7, Part 2: TODO");
-    }
-
-    ("".to_string(), "".to_string())
+        .sum()
 }
 
 fn score(cards: &Vec<char>) -> usize {
@@ -73,12 +77,13 @@ fn score_as_joker(cards: &Vec<char>) -> usize {
     let best_non_joker = card_counts
         .iter()
         .filter(|(&card, _)| card != &'J')
-        .reduce(|a, b| if a.1 > b.1 { a } else { b });
+        .reduce(|a, b| if a.1 > b.1 { a } else { b })
+        .unwrap_or((&&'A', &0))
+        .0
+        .to_owned();
 
-    if let Some(card) = best_non_joker {
-        if let Some(joker_count) = card_counts.get(&'J') {
-            *card_counts.entry(card.0).or_insert(0) += joker_count.clone();
-        }
+    if let Some(joker_count) = card_counts.get(&'J') {
+        *card_counts.entry(best_non_joker).or_insert(0) += joker_count.clone();
     }
 
     card_counts.remove(&'J');
