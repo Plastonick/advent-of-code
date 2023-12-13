@@ -110,11 +110,7 @@ fn card_val(card: &char) -> usize {
 
 fn card_val_2(card: &char) -> usize {
     match card {
-        'A' => 14,
-        'K' => 13,
-        'Q' => 12,
         'J' => 1,
-        'T' => 10,
-        _ => (*card as usize) - ('0' as usize),
+        _ => card_val(card),
     }
 }
