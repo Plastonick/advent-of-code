@@ -2,7 +2,9 @@ use std::fs;
 
 pub fn get_file_contents(file: &str) -> String {
     let file_path = format!("src/inputs/{file}.input");
-    let contents = fs::read_to_string(file_path).expect("Should have been able to read the file");
+    let contents = fs::read_to_string(file_path.clone()).expect(&format!(
+        "Should have been able to read the file {file_path}"
+    ));
 
     contents
 }
