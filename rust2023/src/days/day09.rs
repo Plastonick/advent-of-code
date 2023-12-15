@@ -11,11 +11,6 @@ pub fn run(args: &Args) -> (String, String) {
     let next_in_sequence_sum = sum_sequences(&lines, get_next_in_sequence);
     let prev_in_sequence_sum = sum_sequences(&lines, get_prev_in_sequence);
 
-    if !args.no_answers {
-        println!("Day 9, Part 1: Sum of next in sequence: {next_in_sequence_sum}");
-        println!("Day 9, Part 2: Sum of previous in sequence: {prev_in_sequence_sum}");
-    }
-
     (
         next_in_sequence_sum.to_string(),
         prev_in_sequence_sum.to_string(),

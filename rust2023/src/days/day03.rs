@@ -49,11 +49,6 @@ pub fn run(args: &Args) -> (String, String) {
         })
         .sum::<isize>();
 
-    if !args.no_answers {
-        println!("Day 3, Part 1: The part number sum is {part_number_sum}");
-        println!("Day 3, Part 2: The gear ratio sum is {gear_ratio_sum}");
-    }
-
     (part_number_sum.to_string(), gear_ratio_sum.to_string())
 }
 

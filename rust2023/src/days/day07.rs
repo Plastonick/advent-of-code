@@ -23,11 +23,6 @@ pub fn run(args: &Args) -> (String, String) {
     let part_1_winnings = get_winnings(&cards, score_regular);
     let part_2_winnings = get_winnings(&cards, score_with_joker);
 
-    if !args.no_answers {
-        println!("Day 7, Part 1: {part_1_winnings}");
-        println!("Day 7, Part 2: {part_2_winnings}");
-    }
-
     (part_1_winnings.to_string(), part_2_winnings.to_string())
 }
 

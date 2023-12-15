@@ -64,12 +64,7 @@ pub fn run(args: &Args) -> (String, String) {
         }
     }
 
-    if !args.no_answers {
-        println!("Day 10, Part 1: Furthest point along loop from S: {furthest_from_s}");
-        println!("Day 10, Part 2: There are {inner_points} interior tiles");
-    }
-
-    ("".to_string(), "".to_string())
+    (furthest_from_s.to_string(), "TODO".to_string())
 }
 
 fn intersect_points_to(pos: &Position, s_loop: &Vec<Position>) -> usize {

@@ -45,11 +45,6 @@ pub fn run(args: &Args) -> (String, String) {
         .map(calculate_power)
         .sum::<usize>();
 
-    if !args.no_answers {
-        println!("Day 2, Part 1: The game ID sum is {valid_game_id_sum}");
-        println!("Day 2, Part 2: The power value sum is {power_sum}");
-    }
-
     (valid_game_id_sum.to_string(), power_sum.to_string())
 }
 

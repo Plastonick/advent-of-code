@@ -59,11 +59,6 @@ pub fn run(args: &Args) -> (String, String) {
 
     let total_cards: usize = won_cards.values().sum();
 
-    if !args.no_answers {
-        println!("Day 4, Part 1: The card score sum is {part_1_value}");
-        println!("Day 4, Part 2: The total number of won cards is {total_cards}");
-    }
-
     (part_1_value.to_string(), total_cards.to_string())
 }
 

@@ -42,11 +42,6 @@ pub fn run(args: &Args) -> (String, String) {
 
     let lowest_location_of_ranges = seed_ranges.iter().map(|(l, _)| l).min().unwrap();
 
-    if !args.no_answers {
-        println!("Day 5, Part 1: The lowest location is {lowest_location}");
-        println!("Day 5, Part 2: The lowest location of the ranges is {lowest_location_of_ranges}");
-    }
-
     (
         lowest_location.to_string(),
         lowest_location_of_ranges.to_string(),

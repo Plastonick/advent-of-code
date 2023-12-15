@@ -15,12 +15,7 @@ pub fn run(args: &Args) -> (String, String) {
     let (part_2_time, part_2_distance) = smash_numbers(race_records);
     let part_2: isize = num_ways_to_win(part_2_time, part_2_distance);
 
-    if !args.no_answers {
-        println!("Day 6, Part 1: The answer is {part_1}");
-        println!("Day 6, Part 2: The answer is {part_2}");
-    }
-
-    (part_1.to_string(), "".to_string())
+    (part_1.to_string(), part_2.to_string())
 }
 
 fn smash_numbers(numbers: Vec<(isize, isize)>) -> (isize, isize) {

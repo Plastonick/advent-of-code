@@ -18,11 +18,6 @@ pub fn run(args: &Args) -> (String, String) {
         .map(concat_first_and_last)
         .sum::<isize>();
 
-    if !args.no_answers {
-        println!("Day 1, Part 1: The calibration sum for digits is {part_1_value}");
-        println!("Day 1, Part 2: The calibration sum for words and digits is {part_2_value}");
-    }
-
     (part_1_value.to_string(), part_2_value.to_string())
 }
 

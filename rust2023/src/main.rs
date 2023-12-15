@@ -47,6 +47,7 @@ fn main() {
         days::day08::run,
         days::day09::run,
         days::day10::run,
+        days::day11::run,
     ];
 
     if args.all {
@@ -96,18 +97,24 @@ fn main() {
 
         ascii_table.print(duration_data);
     } else {
-        let day = days
+        let day_opt = days
             .iter()
             .enumerate()
             .position(|(x, _)| (x + 1) as u16 == args.day);
 
-        if day.is_some() {
+        if let Some(day_index) = day_opt {
+            let day = day_index + 1;
             let func_start = get_epoch_ms();
-            days[day.unwrap()](&args);
+            let (part1, part2) = days[day_index](&args);
             let func_duration = get_epoch_ms() - func_start;
 
             if args.time {
                 println!("Calculated in {func_duration:.3}s");
+            }
+
+            if !args.no_answers {
+                println!("Day {day}, Part 1: {part1}");
+                println!("Day {day}, Part 2: {part2}");
             }
         } else {
             println!("I haven't done this day yet ;(");
