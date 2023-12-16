@@ -1,4 +1,4 @@
-use crate::common::{get_file_contents, Answer};
+use crate::common::{get_file_contents, transpose, Answer};
 use crate::Args;
 
 pub fn run(args: &Args) -> Answer {
@@ -18,17 +18,18 @@ pub fn run(args: &Args) -> Answer {
         })
         .collect::<Vec<_>>();
 
-    let mirror_score_sum: usize = patterns.iter().map(mirror_score).sum();
+    let mirror_score_sum: usize = patterns.iter().map(|p| mirror_score(p, 0)).sum();
+    let fudged_score_sum: usize = patterns.iter().map(|p| mirror_score(p, 1)).sum();
 
-    (mirror_score_sum.to_string(), "TODO".to_string())
+    (mirror_score_sum.to_string(), fudged_score_sum.to_string())
 }
 
-fn mirror_score(pattern: &Vec<Vec<char>>) -> usize {
-    if let Some(row) = find_horz_reflection(&pattern) {
+fn mirror_score(pattern: &Vec<Vec<char>>, fudge_factor: usize) -> usize {
+    if let Some(row) = find_horz_reflection(&pattern, fudge_factor) {
         return row * 100;
     }
 
-    if let Some(col) = find_vert_reflection(&pattern) {
+    if let Some(col) = find_vert_reflection(&pattern, fudge_factor) {
         return col;
     }
 
@@ -36,26 +37,26 @@ fn mirror_score(pattern: &Vec<Vec<char>>) -> usize {
 }
 
 // a is "above" b, a and b are not necessarily same length.
-fn are_mirrored(a: &[Vec<char>], b: &[Vec<char>]) -> bool {
+fn are_mirrored(a: &[Vec<char>], b: &[Vec<char>], fudge_factor: usize) -> bool {
     let num_rows_checked = a.len().min(b.len());
 
-    for i in 0..num_rows_checked {
-        let j = a.len() - i - 1;
+    let fudginess = (0..num_rows_checked)
+        .map(|i| {
+            let j = a.len() - i - 1;
 
-        let a_row = a.get(j).unwrap().iter().collect::<String>();
-        let b_row = b.get(i).unwrap().iter().collect::<String>();
+            let a_row = a.get(j).unwrap();
+            let b_row = b.get(i).unwrap();
 
-        if a_row != b_row {
-            return false;
-        }
-    }
+            similarity(&a_row, &b_row)
+        })
+        .sum::<usize>();
 
-    true
+    fudginess == fudge_factor
 }
 
-fn find_horz_reflection(pattern: &Vec<Vec<char>>) -> Option<usize> {
+fn find_horz_reflection(pattern: &Vec<Vec<char>>, fudge_factor: usize) -> Option<usize> {
     for i in 1..pattern.len() {
-        if are_mirrored(&pattern[0..i], &pattern[i..pattern.len()]) {
+        if are_mirrored(&pattern[0..i], &pattern[i..pattern.len()], fudge_factor) {
             return Some(i);
         }
     }
@@ -63,20 +64,15 @@ fn find_horz_reflection(pattern: &Vec<Vec<char>>) -> Option<usize> {
     None
 }
 
-fn find_vert_reflection(pattern: &Vec<Vec<char>>) -> Option<usize> {
-    find_horz_reflection(&transpose2(pattern.clone()))
+fn find_vert_reflection(pattern: &Vec<Vec<char>>, fudge_factor: usize) -> Option<usize> {
+    find_horz_reflection(&transpose(pattern.clone()), fudge_factor)
 }
 
-fn transpose2<T>(v: Vec<Vec<T>>) -> Vec<Vec<T>> {
-    assert!(!v.is_empty());
-    let len = v[0].len();
-    let mut iters: Vec<_> = v.into_iter().map(|n| n.into_iter()).collect();
-    (0..len)
-        .map(|_| {
-            iters
-                .iter_mut()
-                .map(|n| n.next().unwrap())
-                .collect::<Vec<T>>()
-        })
-        .collect()
+fn similarity(a: &Vec<char>, b: &Vec<char>) -> usize {
+    assert_eq!(a.len(), b.len());
+
+    a.iter()
+        .enumerate()
+        .filter(|(i, a)| b.get(*i).unwrap() != *a)
+        .count()
 }
