@@ -65,25 +65,28 @@ fn main() {
     ];
 
     if args.all {
-        let mut duration_data = Vec::new();
         let all_start = get_epoch_ms();
 
-        for (day, func) in days.iter().enumerate() {
-            let func_start = get_epoch_ms();
-            let (part1, part2) = func(&args);
-            let func_duration = get_epoch_ms() - func_start;
+        let mut duration_data = days
+            .iter()
+            .enumerate()
+            .map(|(day, func)| {
+                let func_start = get_epoch_ms();
+                let (part1, part2) = func(&args);
+                let func_duration = get_epoch_ms() - func_start;
 
-            if args.no_answers {
-                duration_data.push(vec![format!("{}", day + 1), format!("{func_duration:.3}s")]);
-            } else {
-                duration_data.push(vec![
-                    format!("{}", day + 1),
-                    format!("{func_duration:.3}s"),
-                    part1,
-                    part2,
-                ]);
-            }
-        }
+                if args.no_answers {
+                    vec![format!("{}", day + 1), format!("{func_duration:.3}s")]
+                } else {
+                    vec![
+                        format!("{}", day + 1),
+                        format!("{func_duration:.3}s"),
+                        part1,
+                        part2,
+                    ]
+                }
+            })
+            .collect::<Vec<_>>();
 
         let all_duration = get_epoch_ms() - all_start;
 
