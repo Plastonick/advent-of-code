@@ -1,5 +1,7 @@
 use std::fs;
 
+pub type Answer = (String, String);
+
 pub fn get_file_contents(file: &str) -> String {
     let file_path = format!("src/inputs/{file}.input");
     let contents = fs::read_to_string(file_path.clone()).expect(&format!(
