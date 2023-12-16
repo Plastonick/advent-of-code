@@ -24,12 +24,12 @@ pub fn run(args: &Args) -> Answer {
     (mirror_score_sum.to_string(), fudged_score_sum.to_string())
 }
 
-fn mirror_score(pattern: &Vec<Vec<char>>, fudge_factor: usize) -> usize {
-    if let Some(row) = find_horz_reflection(&pattern, fudge_factor) {
+fn mirror_score(pattern: &Vec<Vec<char>>, desired_fudge: usize) -> usize {
+    if let Some(row) = find_horz_reflection(&pattern, desired_fudge) {
         return row * 100;
     }
 
-    if let Some(col) = find_vert_reflection(&pattern, fudge_factor) {
+    if let Some(col) = find_vert_reflection(&pattern, desired_fudge) {
         return col;
     }
 
@@ -37,10 +37,10 @@ fn mirror_score(pattern: &Vec<Vec<char>>, fudge_factor: usize) -> usize {
 }
 
 // a is "above" b, a and b are not necessarily same length.
-fn are_mirrored(a: &[Vec<char>], b: &[Vec<char>], fudge_factor: usize) -> bool {
+fn are_mirrored(a: &[Vec<char>], b: &[Vec<char>], desired_fudge: usize) -> bool {
     let num_rows_checked = a.len().min(b.len());
 
-    let fudginess = (0..num_rows_checked)
+    let fudge_factor = (0..num_rows_checked)
         .map(|i| {
             let j = a.len() - i - 1;
 
@@ -51,12 +51,12 @@ fn are_mirrored(a: &[Vec<char>], b: &[Vec<char>], fudge_factor: usize) -> bool {
         })
         .sum::<usize>();
 
-    fudginess == fudge_factor
+    fudge_factor == desired_fudge
 }
 
-fn find_horz_reflection(pattern: &Vec<Vec<char>>, fudge_factor: usize) -> Option<usize> {
+fn find_horz_reflection(pattern: &Vec<Vec<char>>, desired_fudge: usize) -> Option<usize> {
     for i in 1..pattern.len() {
-        if are_mirrored(&pattern[0..i], &pattern[i..pattern.len()], fudge_factor) {
+        if are_mirrored(&pattern[0..i], &pattern[i..pattern.len()], desired_fudge) {
             return Some(i);
         }
     }
@@ -64,8 +64,8 @@ fn find_horz_reflection(pattern: &Vec<Vec<char>>, fudge_factor: usize) -> Option
     None
 }
 
-fn find_vert_reflection(pattern: &Vec<Vec<char>>, fudge_factor: usize) -> Option<usize> {
-    find_horz_reflection(&transpose(pattern.clone()), fudge_factor)
+fn find_vert_reflection(pattern: &Vec<Vec<char>>, desired_fudge: usize) -> Option<usize> {
+    find_horz_reflection(&transpose(pattern.clone()), desired_fudge)
 }
 
 fn similarity(a: &Vec<char>, b: &Vec<char>) -> usize {
