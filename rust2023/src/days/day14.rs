@@ -1,5 +1,5 @@
-use crate::common::{get_file_contents, get_lines, rotate_270, rotate_90, Answer};
-use crate::{get_epoch_ms, Args};
+use crate::common::{get_file_contents, rotate_270, rotate_90, Answer};
+use crate::Args;
 use std::collections::HashMap;
 
 pub fn run(_args: &Args) -> Answer {
