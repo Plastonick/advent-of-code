@@ -33,3 +33,24 @@ pub fn transpose<T>(v: Vec<Vec<T>>) -> Vec<Vec<T>> {
         })
         .collect()
 }
+
+pub fn rotate_90<T>(v: Vec<Vec<T>>) -> Vec<Vec<T>> {
+    transpose(v)
+        .into_iter()
+        .map(|mut r| {
+            r.reverse();
+            r
+        })
+        .collect()
+}
+
+pub fn rotate_270<T>(v: Vec<Vec<T>>) -> Vec<Vec<T>> {
+    transpose(
+        v.into_iter()
+            .map(|mut r| {
+                r.reverse();
+                r
+            })
+            .collect(),
+    )
+}
