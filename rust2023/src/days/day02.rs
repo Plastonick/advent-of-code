@@ -27,7 +27,7 @@ impl FromStr for Colour {
 type Show = HashMap<Colour, usize>;
 type Game = (isize, Vec<Show>);
 
-pub fn run(args: &Args) -> (String, String) {
+pub fn run(_args: &Args) -> (String, String) {
     let lines = get_lines("day02");
     let limit = HashMap::from([(Colour::Red, 12), (Colour::Green, 13), (Colour::Blue, 14)]);
 

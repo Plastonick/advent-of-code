@@ -1,10 +1,8 @@
 use crate::common::get_lines;
 use crate::Args;
 
-pub fn run(args: &Args) -> (String, String) {
+pub fn run(_args: &Args) -> (String, String) {
     let lines = get_lines("day01");
-
-    // get_number_occurrences(lines.get(0).unwrap());
 
     let part_1_value = lines
         .iter()
