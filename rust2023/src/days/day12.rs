@@ -27,7 +27,7 @@ pub fn run(args: &Args) -> Answer {
         .map(|(p, c)| count_valid(p, c))
         .sum::<usize>();
 
-    (count_sum.to_string(), "TODO".to_string())
+    ("".to_string(), "".to_string())
 }
 
 fn count_valid(pattern: &Vec<char>, counts: &Vec<usize>) -> usize {

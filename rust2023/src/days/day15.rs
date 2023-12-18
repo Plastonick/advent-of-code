@@ -10,6 +10,36 @@ pub fn run(args: &Args) -> Answer {
     };
 
     let hash_sum: usize = file.trim().split(",").map(hash).sum();
+
+    let boxes = generate_boxes(file);
+
+    let ordered_boxes = boxes
+        .iter()
+        .map(|b| {
+            let mut vec = b.values().collect::<Vec<_>>();
+            vec.sort_by(|(_, a), (_, b)| a.cmp(b));
+
+            vec.iter().map(|(lens, _)| *lens).collect::<Vec<_>>()
+        })
+        .collect::<Vec<Vec<usize>>>();
+
+    let focusing_power: usize = ordered_boxes
+        .iter()
+        .enumerate()
+        .map(|(i, lenses)| {
+            (i + 1)
+                * lenses
+                    .iter()
+                    .enumerate()
+                    .map(|(slot, l)| (slot + 1) * l)
+                    .sum::<usize>()
+        })
+        .sum();
+
+    (hash_sum.to_string(), focusing_power.to_string())
+}
+
+fn generate_boxes(file: String) -> [HashMap<String, (usize, usize)>; 256] {
     let mut boxes: [HashMap<String, (usize, usize)>; 256] =
         core::array::from_fn(|_| HashMap::new());
 
@@ -36,32 +66,7 @@ pub fn run(args: &Args) -> Answer {
         }
     }
 
-    let ordered_boxes = boxes
-        .iter()
-        .map(|b| {
-            let mut vec = b.values().collect::<Vec<_>>();
-            vec.sort_by(|(_, a), (_, b)| a.cmp(b));
-            vec
-        })
-        .map(|lenses| lenses.iter().map(|(lens, _)| *lens).collect::<Vec<_>>())
-        .collect::<Vec<Vec<usize>>>();
-
-    let focusing_power: usize = ordered_boxes
-        .iter()
-        .enumerate()
-        .map(|(i, lenses)| {
-            (i + 1)
-                * lenses
-                    .iter()
-                    .enumerate()
-                    .map(|(slot, l)| (slot + 1) * l)
-                    .sum::<usize>()
-        })
-        .sum();
-
-    dbg!(ordered_boxes);
-
-    (hash_sum.to_string(), focusing_power.to_string())
+    boxes
 }
 
 fn hash(str: &str) -> usize {
