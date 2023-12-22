@@ -61,8 +61,6 @@ fn generate_boxes(file: String) -> [HashMap<String, (usize, usize)>; 256] {
             };
 
             boxes[box_index].insert(label.to_string(), (focal_length, order));
-
-            println!("{} => {}", label, box_index);
         }
     }
 

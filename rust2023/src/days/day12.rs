@@ -33,86 +33,28 @@ pub fn run(args: &Args) -> Answer {
 fn count_valid(pattern: &Vec<char>, counts: &Vec<usize>) -> usize {
     let potential = get_contiguous_counts(pattern);
 
-    dbg!(&potential);
-
-    let pot = &potential.iter().map(|x| x.to_string()).collect::<String>();
-    let act = &counts.iter().map(|x| x.to_string()).collect::<String>();
-
-    println!("{} => {}", pot, act);
-
     2
 }
 
-// fn is_valid(pattern: &Vec<char>, counts: &Vec<usize>) -> bool {
-//     get_counts(&pattern)
-//         .iter()
-//         .enumerate()
-//         .find(|(i, &count)| count != *counts.get(*i).unwrap())
-//         .is_none()
-// }
-
-fn get_contiguous_counts(pattern: &Vec<char>) -> Vec<usize> {
-    let mut lengths: Vec<usize> = vec![];
-    let mut prev_el: Option<char> = None;
+fn get_contiguous_counts(pattern: &Vec<char>) -> Vec<(char, usize)> {
+    let mut lengths: Vec<(char, usize)> = vec![];
+    let mut maybe_previous: Option<char> = None;
     let mut current_length = 0;
 
-    for ch in pattern {
-        if ch == &'.' {
-            continue;
+    for &current_ch in pattern {
+        if let Some(previous_element) = maybe_previous {
+            if previous_element != current_ch {
+                lengths.push((previous_element, current_length));
+                current_length = 0;
+            }
         }
 
-        // if element == current_element:
-        //     current_length += 1
-        // else:
-        // if current_element is not None:
-        //     lengths.append(current_length)
-        // current_element = element
-        // current_length = 1
-
-        if prev_el != Some(*ch) {
-            lengths.push(current_length);
-            current_length = 0;
-        }
-
-        prev_el = Some(*ch);
+        maybe_previous = Some(current_ch);
         current_length += 1;
     }
 
-    dbg!(&pattern, &lengths);
+    // make sure we add the last set on, too!
+    lengths.push((maybe_previous.unwrap(), current_length));
 
     lengths
-
-    // let enumerated_pattern: Vec<(usize, char)> = pattern
-    //     .iter()
-    //     .collect::<String>()
-    //     .replace(".", "")
-    //     .chars()
-    //     .enumerate()
-    //     .collect::<Vec<_>>();
-    //
-    // let foo = enumerated_pattern
-    //     .iter()
-    //     .fold(Vec::new(), |mut acc, (i, el)| {
-    //         let count = if i == &0 {
-    //             1
-    //         } else if let Some(&prev) = enumerated_pattern.get(i - 1) {
-    //             if el == &prev.1 {
-    //                 prev.0 + 1
-    //             } else {
-    //                 1
-    //             }
-    //         } else {
-    //             1
-    //         };
-    //
-    //         acc.push((el, count));
-    //
-    //         acc
-    //     })
-    //     .iter()
-    //     .enumerate()
-    //     .filter_map(|(i, (ch, count))| {
-    //
-    //     })
-    //     .collect::<Vec<_>>();
 }
