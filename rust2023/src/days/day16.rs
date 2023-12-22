@@ -1,23 +1,8 @@
-use crate::common::{get_lines, Answer};
+use crate::common::{get_lines, Answer, Vector};
 use crate::Args;
 use std::collections::{HashMap, HashSet};
 use std::thread::sleep;
 use std::time::Duration;
-
-#[derive(Hash, PartialEq, Eq, Copy, Clone)]
-struct Vector {
-    row: isize,
-    col: isize,
-}
-
-impl Vector {
-    fn add(&self, a: &Vector) -> Vector {
-        Vector {
-            row: self.row + a.row,
-            col: self.col + a.col,
-        }
-    }
-}
 
 pub fn run(args: &Args) -> Answer {
     let lines = if args.test {

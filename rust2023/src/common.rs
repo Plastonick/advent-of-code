@@ -2,6 +2,21 @@ use std::fs;
 
 pub type Answer = (String, String);
 
+#[derive(Hash, PartialEq, Eq, Copy, Clone, Debug)]
+pub struct Vector {
+    pub row: isize,
+    pub col: isize,
+}
+
+impl Vector {
+    pub fn add(&self, other: &Vector) -> Vector {
+        Vector {
+            row: self.row + other.row,
+            col: self.col + other.col,
+        }
+    }
+}
+
 pub fn get_file_contents(file: &str) -> String {
     let file_path = format!("src/inputs/{file}.input");
     let contents = fs::read_to_string(file_path.clone()).expect(&format!(
