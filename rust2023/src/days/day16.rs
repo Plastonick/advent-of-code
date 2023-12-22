@@ -1,4 +1,5 @@
-use crate::common::{get_lines, Answer, Vector};
+use crate::common::{get_lines, Answer};
+use crate::maps::Vector;
 use crate::Args;
 use std::collections::{HashMap, HashSet};
 use std::thread::sleep;

@@ -1,4 +1,5 @@
 use crate::common::get_lines;
+use crate::maps::Vector;
 use crate::Args;
 use std::collections::{HashMap, HashSet};
 
@@ -56,80 +57,13 @@ pub fn run(args: &Args) -> (String, String) {
     // part 2 we're going to be clever and count the number of loop intersections by tracing a ray
     // from the edge of the map and counting the number of loop intersections.
     // This is _slightly_
-    let (height, width) = (
-        lines.len() as isize * 2,
-        lines.first().unwrap().len() as isize * 2,
-    );
-    let inner_points = find_inner_points(&lines, (height, width), s_loop);
+    let s_loop_as_vecs = s_loop
+        .into_iter()
+        .map(|(row, col)| Vector { row, col })
+        .collect::<Vec<_>>();
+    let inner_points = crate::maps::find_inner_points(s_loop_as_vecs);
 
     (furthest_from_s.to_string(), inner_points.len().to_string())
-}
-
-fn find_inner_points(
-    lines: &Vec<String>,
-    size: (isize, isize),
-    s_loop: Vec<Position>,
-) -> HashSet<Position> {
-    // to allow us to draw rays to points without awkward interactions, we'll shift all the points
-    // slightly out of the plane
-    let expanded_map = lines
-        .iter()
-        .enumerate()
-        .map(|(r, row)| {
-            row.chars()
-                .enumerate()
-                .map(|(c, _)| (((r * 2) + 1) as isize, ((c * 2) + 1) as isize))
-                .collect::<Vec<Position>>()
-        })
-        .flatten()
-        .collect::<HashSet<Position>>();
-
-    // we'll also need to shift the loop, then fill in any gaps
-    let expanded_loop = s_loop
-        .iter()
-        .map(|p| (p.0 * 2, p.1 * 2))
-        .collect::<Vec<_>>();
-    let filled_loop = expanded_loop
-        .iter()
-        .enumerate()
-        .map(|(i, &pos)| {
-            let next_pos = expanded_loop[(i + 1) % expanded_loop.len()];
-            let mid_pos = ((pos.0 + next_pos.0) / 2, (pos.1 + next_pos.1) / 2);
-
-            vec![pos, mid_pos]
-        })
-        .flatten()
-        .collect::<HashSet<_>>();
-
-    // now we just need to draw rays from offset positions from the side of the map and keep a count
-    // of the number of intersections of the loop. Odd number => inner point.
-
-    let (height, width) = size;
-    let mut inner_points = HashSet::new();
-
-    for r in 0..height {
-        let mut intersects = 0;
-        for c in 0..width {
-            let pos = (r, c);
-
-            if filled_loop.contains(&pos) {
-                intersects += 1;
-            } else {
-                if expanded_map.contains(&pos) && intersects % 2 == 1 {
-                    inner_points.insert((r, c));
-                }
-            }
-        }
-    }
-
-    // we have counted some "new" positions though that aren't strictly a tile originally! Remap the
-    // inner points and ignore any that map to the loop
-
-    inner_points
-        .iter()
-        .map(|(r, c)| (r - 1, c - 1))
-        .filter(|x| !filled_loop.contains(x))
-        .collect()
 }
 
 fn map_tile(pos: Position, tile: char) -> Option<(Position, (Position, Position))> {
