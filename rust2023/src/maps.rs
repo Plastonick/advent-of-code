@@ -29,7 +29,7 @@ impl Vector {
     }
 }
 
-pub fn find_inner_points(input_loop: Vec<Vector>) -> HashSet<Vector> {
+pub fn find_inner_points(input_loop: &Vec<Vector>) -> HashSet<Vector> {
     // to allow us to draw rays to points without awkward interactions, we'll shift all the points
     // slightly out of the plane
     let expanded_loop = input_loop.iter().map(|p| p.mul(2)).collect::<Vec<_>>();
@@ -50,32 +50,19 @@ pub fn find_inner_points(input_loop: Vec<Vector>) -> HashSet<Vector> {
     // now we just need to draw rays from offset positions from the side of the map and keep a count
     // of the number of intersections of the loop. Odd number => inner point.
 
-    let size = expanded_loop.iter().fold(
-        (expanded_loop[0].clone(), expanded_loop[0].clone()),
-        |(mut min, mut max), v| {
-            let min_vec = Vector {
-                row: min.row.min(v.row),
-                col: min.col.min(v.col),
-            };
-            let max_vec = Vector {
-                row: max.row.max(v.row),
-                col: max.col.max(v.col),
-            };
-
-            (min_vec, max_vec)
-        },
-    );
+    let size = point_extremum(&expanded_loop);
 
     let mut inner_points = HashSet::new();
-    for r in size.0.row..=size.1.row {
+    for row in size.0.row..=size.1.row {
         let mut loop_intersects = 0;
-        for c in size.0.col..=size.1.col {
-            let pos = Vector { row: r, col: c };
+
+        for col in size.0.col..=size.1.col {
+            let pos = Vector { row, col };
 
             if filled_loop.contains(&pos) {
                 loop_intersects += 1;
             } else {
-                if (pos.row % 2 == 1 && pos.col % 2 == 1) && loop_intersects % 2 == 1 {
+                if (pos.row % 2 != 0 && pos.col % 2 != 0) && loop_intersects % 2 == 1 {
                     inner_points.insert(pos);
                 }
             }
@@ -89,5 +76,43 @@ pub fn find_inner_points(input_loop: Vec<Vector>) -> HashSet<Vector> {
         .iter()
         .map(|v| v.add(&Vector { row: -1, col: -1 }))
         .filter(|x| !filled_loop.contains(x))
+        .map(|x| x.div(2))
         .collect()
+}
+
+fn point_extremum(points: &Vec<Vector>) -> (Vector, Vector) {
+    points.iter().fold(
+        (points[0].clone(), points[0].clone()),
+        |(mut min, mut max), v| {
+            let min_vec = Vector {
+                row: min.row.min(v.row),
+                col: min.col.min(v.col),
+            };
+            let max_vec = Vector {
+                row: max.row.max(v.row),
+                col: max.col.max(v.col),
+            };
+
+            (min_vec, max_vec)
+        },
+    )
+}
+
+pub fn _print(points: &HashSet<Vector>) {
+    let size = point_extremum(&points.clone().into_iter().collect::<Vec<_>>());
+
+    for row in size.0.row..=size.1.row {
+        print!("Row: {}", row);
+
+        for col in size.0.col..=size.1.col {
+            let pos = Vector { row, col };
+            let point = if points.contains(&pos) { '#' } else { '.' };
+
+            print!("{}", point);
+        }
+
+        println!();
+    }
+    println!();
+    println!();
 }

@@ -4,6 +4,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 mod common;
 mod days;
+mod maps;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]

@@ -61,7 +61,7 @@ pub fn run(args: &Args) -> (String, String) {
         .into_iter()
         .map(|(row, col)| Vector { row, col })
         .collect::<Vec<_>>();
-    let inner_points = crate::maps::find_inner_points(s_loop_as_vecs);
+    let inner_points = crate::maps::find_inner_points(&s_loop_as_vecs);
 
     (furthest_from_s.to_string(), inner_points.len().to_string())
 }
