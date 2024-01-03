@@ -1,7 +1,7 @@
 use crate::common::{get_lines, Answer};
 use crate::maps::{Vector, _print_vec};
 use crate::Args;
-use pathfinding::prelude::dijkstra;
+use pathfinding::prelude::{astar, dijkstra};
 use std::collections::HashMap;
 
 struct Map {
@@ -128,9 +128,11 @@ fn find_path(
     target: &Vector,
     stepping: (isize, isize),
 ) -> (Vec<(Vector, Vector)>, usize) {
-    dijkstra(
+    astar(
         &(Vector { row: 0, col: 0 }, Vector { row: 0, col: 0 }),
         |(pos, d)| pos.successors(&map, &d, &stepping),
+        // admissible heuristic since all steps cost at least 1: https://en.wikipedia.org/wiki/Admissible_heuristic
+        |(pos, _)| pos.row.abs_diff(target.row) + pos.col.abs_diff(target.col),
         |(x, _)| x.eq(&target),
     )
     .expect("No path found")
