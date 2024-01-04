@@ -35,7 +35,7 @@ fn map_signature(map: &Vec<Vec<char>>) -> String {
         .join("\n")
 }
 
-fn print_map(map: &Vec<Vec<char>>) {
+fn _print_map(map: &Vec<Vec<char>>) {
     println!("{}\n\n", map_signature(&map))
 }
 

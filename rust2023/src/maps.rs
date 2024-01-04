@@ -81,9 +81,9 @@ pub fn find_inner_points(input_loop: &Vec<Vector>) -> HashSet<Vector> {
 }
 
 fn point_extremum(points: &Vec<Vector>) -> (Vector, Vector) {
-    points.iter().fold(
-        (points[0].clone(), points[0].clone()),
-        |(mut min, mut max), v| {
+    points
+        .iter()
+        .fold((points[0].clone(), points[0].clone()), |(min, max), v| {
             let min_vec = Vector {
                 row: min.row.min(v.row),
                 col: min.col.min(v.col),
@@ -94,16 +94,13 @@ fn point_extremum(points: &Vec<Vector>) -> (Vector, Vector) {
             };
 
             (min_vec, max_vec)
-        },
-    )
+        })
 }
 
 pub fn _print(points: &HashSet<Vector>) {
     let size = point_extremum(&points.clone().into_iter().collect::<Vec<_>>());
 
     for row in size.0.row..=size.1.row {
-        print!("Row: {}", row);
-
         for col in size.0.col..=size.1.col {
             let pos = Vector { row, col };
             let point = if points.contains(&pos) { '#' } else { '.' };
@@ -115,4 +112,10 @@ pub fn _print(points: &HashSet<Vector>) {
     }
     println!();
     println!();
+}
+
+pub fn _print_vec(points: &Vec<Vector>) {
+    let hash_set = HashSet::from_iter(points.clone().into_iter());
+
+    _print(&hash_set);
 }

@@ -1,7 +1,7 @@
 use crate::common::{get_lines, Answer};
-use crate::maps::{Vector, _print_vec};
+use crate::maps::Vector;
 use crate::Args;
-use pathfinding::prelude::{astar, dijkstra};
+use pathfinding::prelude::astar;
 use std::collections::HashMap;
 
 struct Map {
