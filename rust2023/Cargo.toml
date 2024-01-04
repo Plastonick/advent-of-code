@@ -9,4 +9,5 @@ edition = "2021"
 ascii_table = "4.0.3"
 clap = { version = "4.0.29", features = ["derive"] }
 num = "0.4.0"
+pathfinding = "4.8.0"
 regex = { version = "1.7.0", features = [] }
