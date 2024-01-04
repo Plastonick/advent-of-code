@@ -1,4 +1,19 @@
+use crate::common::get_lines;
 use crate::Args;
+use num::integer::lcm;
+use regex::Regex;
+use std::collections::HashMap;
+
+type Nodes = HashMap<String, (String, String)>;
+
+pub fn run(args: &Args) -> (String, String) {
+    let (start_node, end_node) = ("AAA", "ZZZ");
+
+    let lines = if args.test {
+        get_lines("day08-test")
+    } else {
+        get_lines("day08")
+    };
 
     let directions = lines.get(0).unwrap().chars().collect::<Vec<_>>();
     let nodes = lines.iter().skip(2).map(line_to_node).collect::<Nodes>();
@@ -18,14 +33,15 @@ use crate::Args;
         direction = directions.get(part_1_goes % directions.len()).unwrap();
     }
 
-    let part_2_node_periods = nodes
+    let part_2 = nodes
         .iter()
         .map(|(n, _)| n.to_owned())
         .filter(|n| n.chars().nth(2).unwrap() == 'A')
         .map(|n| start_node_period(n.clone(), &directions, &nodes))
-        .collect::<Vec<_>>();
-
-    let part_2 = lcm(&part_2_node_periods);
+        .fold(1, |mut acc, int| {
+            acc = lcm(acc, int);
+            acc
+        });
 
     (part_1_goes.to_string(), part_2.to_string())
 }
@@ -74,20 +90,4 @@ fn start_node_period(start_node_address: String, directions: &Vec<char>, nodes: 
             return goes;
         }
     }
-}
-
-fn lcm(nums: &[usize]) -> usize {
-    if nums.len() == 1 {
-        return nums[0];
-    }
-    let a = nums[0];
-    let b = lcm(&nums[1..]);
-    a * b / gcd(a, b)
-}
-
-fn gcd(a: usize, b: usize) -> usize {
-    if b == 0 {
-        return a;
-    }
-    gcd(b, a % b)
 }

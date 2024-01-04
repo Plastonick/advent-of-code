@@ -1,7 +1,7 @@
 use crate::common::get_lines;
 use crate::maps::Vector;
 use crate::Args;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 
 type Position = (isize, isize);
 type Map = HashMap<Position, (Position, Position)>;

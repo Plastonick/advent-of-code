@@ -23,11 +23,47 @@ pub fn run(args: &Args) -> Answer {
         .collect::<Vec<_>>();
 
     let count_sum = patterns
-        .iter()
-        .map(|(p, c)| count_valid(p, c))
+        .into_iter()
+        .map(|(p, c)| brute_force_valid(p, &c))
         .sum::<usize>();
 
-    ("".to_string(), "".to_string())
+    (count_sum.to_string(), "".to_string())
+}
+
+fn brute_force_valid(pattern: Vec<char>, counts: &Vec<usize>) -> usize {
+    let all_patterns = get_all(pattern);
+
+    let valid_count = all_patterns
+        .iter()
+        .map(|p| {
+            get_contiguous_counts(&p)
+                .iter()
+                .filter_map(|(ch, count)| if ch == &'#' { Some(*count) } else { None })
+                .collect::<Vec<usize>>()
+        })
+        .filter(|x| x == counts)
+        .count();
+
+    valid_count
+}
+
+fn get_all(pattern: Vec<char>) -> Vec<Vec<char>> {
+    let question_mark_match = pattern.iter().position(|c| c == &'?');
+
+    if let Some(index) = question_mark_match {
+        let mut as_hash = pattern.clone();
+        as_hash[index] = '#';
+        let mut as_dot = pattern;
+        as_dot[index] = '.';
+
+        let mut patterns = get_all(as_hash);
+        patterns.extend_from_slice(&get_all(as_dot));
+
+        patterns
+    } else {
+        // no more `?` in the pattern, just return it!
+        vec![pattern]
+    }
 }
 
 fn count_valid(pattern: &Vec<char>, counts: &Vec<usize>) -> usize {
