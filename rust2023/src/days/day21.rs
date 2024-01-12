@@ -38,12 +38,8 @@ pub fn run(_args: &Args) -> Answer {
         .flatten()
         .collect::<HashSet<Vector>>();
 
-    dbg!(&start_point);
     let first_locations = HashSet::from([start_point]);
     let part_1 = state_after_steps(first_locations, &garden_plots, steps_part_1);
-
-    _print(&garden_plots);
-    _print(&part_1);
 
     (part_1.len().to_string(), "".to_string())
 }
