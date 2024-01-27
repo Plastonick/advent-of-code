@@ -14,6 +14,13 @@ impl Vector {
         }
     }
 
+    pub fn sub(&self, other: &Vector) -> Vector {
+        Vector {
+            row: self.row - other.row,
+            col: self.col - other.col,
+        }
+    }
+
     pub fn mul(&self, by: isize) -> Vector {
         Vector {
             row: self.row * by,
