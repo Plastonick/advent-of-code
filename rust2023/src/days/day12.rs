@@ -66,12 +66,6 @@ fn get_all(pattern: Vec<char>) -> Vec<Vec<char>> {
     }
 }
 
-fn count_valid(pattern: &Vec<char>, counts: &Vec<usize>) -> usize {
-    let potential = get_contiguous_counts(pattern);
-
-    2
-}
-
 fn get_contiguous_counts(pattern: &Vec<char>) -> Vec<(char, usize)> {
     let mut lengths: Vec<(char, usize)> = vec![];
     let mut maybe_previous: Option<char> = None;

@@ -1,5 +1,5 @@
 use ascii_table::{Align, AsciiTable};
-use clap::{command, Parser};
+use clap::Parser;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 mod common;
