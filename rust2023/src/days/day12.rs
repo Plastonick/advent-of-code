@@ -1,6 +1,13 @@
 use crate::common::{get_lines, Answer};
 use crate::Args;
 
+#[derive(Copy, Clone, Eq, PartialEq)]
+enum Spring {
+    Operational,
+    Broken,
+    Unknown,
+}
+
 pub fn run(args: &Args) -> Answer {
     let lines = if args.test {
         get_lines("day12-test")
@@ -13,10 +20,18 @@ pub fn run(args: &Args) -> Answer {
         .map(|x| x.split_once(' ').unwrap())
         .map(|(pattern, numbers)| {
             (
-                pattern.chars().collect::<Vec<_>>(),
+                pattern
+                    .chars()
+                    .map(|ch| match ch {
+                        '.' => Spring::Operational,
+                        '#' => Spring::Broken,
+                        '?' => Spring::Unknown,
+                        _ => panic!("Unexpected spring character"),
+                    })
+                    .collect::<Vec<_>>(),
                 numbers
                     .split(",")
-                    .map(|x| x.parse::<usize>().unwrap())
+                    .map(|x| x.parse::<u32>().unwrap())
                     .collect::<Vec<_>>(),
             )
         })
@@ -25,12 +40,12 @@ pub fn run(args: &Args) -> Answer {
     let count_sum = patterns
         .into_iter()
         .map(|(p, c)| brute_force_valid(p, &c))
-        .sum::<usize>();
+        .sum::<u32>();
 
     (count_sum.to_string(), "".to_string())
 }
 
-fn brute_force_valid(pattern: Vec<char>, counts: &Vec<usize>) -> usize {
+fn brute_force_valid(pattern: Vec<Spring>, counts: &[u32]) -> u32 {
     let all_patterns = get_all(pattern);
 
     let valid_count = all_patterns
@@ -38,23 +53,30 @@ fn brute_force_valid(pattern: Vec<char>, counts: &Vec<usize>) -> usize {
         .map(|p| {
             get_contiguous_counts(&p)
                 .iter()
-                .filter_map(|(ch, count)| if ch == &'#' { Some(*count) } else { None })
-                .collect::<Vec<usize>>()
+                .filter_map(|(ch, count)| {
+                    if ch == &Spring::Broken {
+                        Some(*count)
+                    } else {
+                        None
+                    }
+                })
+                .collect::<Vec<u32>>()
         })
         .filter(|x| x == counts)
         .count();
 
-    valid_count
+    valid_count as u32
 }
 
-fn get_all(pattern: Vec<char>) -> Vec<Vec<char>> {
-    let question_mark_match = pattern.iter().position(|c| c == &'?');
+fn get_all(pattern: Vec<Spring>) -> Vec<Vec<Spring>> {
+    let question_mark_match = pattern.iter().position(|c| c == &Spring::Unknown);
 
     if let Some(index) = question_mark_match {
         let mut as_hash = pattern.clone();
-        as_hash[index] = '#';
+
+        as_hash[index] = Spring::Broken;
         let mut as_dot = pattern;
-        as_dot[index] = '.';
+        as_dot[index] = Spring::Operational;
 
         let mut patterns = get_all(as_hash);
         patterns.extend_from_slice(&get_all(as_dot));
@@ -66,9 +88,9 @@ fn get_all(pattern: Vec<char>) -> Vec<Vec<char>> {
     }
 }
 
-fn get_contiguous_counts(pattern: &Vec<char>) -> Vec<(char, usize)> {
-    let mut lengths: Vec<(char, usize)> = vec![];
-    let mut maybe_previous: Option<char> = None;
+fn get_contiguous_counts(pattern: &[Spring]) -> Vec<(Spring, u32)> {
+    let mut lengths: Vec<(Spring, u32)> = vec![];
+    let mut maybe_previous: Option<Spring> = None;
     let mut current_length = 0;
 
     for &current_ch in pattern {
