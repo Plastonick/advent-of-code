@@ -7,6 +7,7 @@ edition = "2021"
 
 [dependencies]
 ascii_table = "4.0.3"
+cached = "0.58.0"
 clap = { version = "4.0.29", features = ["derive"] }
 num = "0.4.0"
 pathfinding = "4.8.0"
