@@ -1,22 +1,13 @@
 use crate::common::{get_lines, Answer};
 use crate::Args;
 use cached::proc_macro::cached;
+use cached::{Cached, SizedCache};
 
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
 enum Spring {
     Operational,
     Broken,
     Unknown,
-}
-
-impl Spring {
-    fn as_char(self) -> char {
-        match self {
-            Spring::Operational => '.',
-            Spring::Broken => '#',
-            Spring::Unknown => '?',
-        }
-    }
 }
 
 pub fn run(args: &Args) -> Answer {
@@ -50,7 +41,10 @@ pub fn run(args: &Args) -> Answer {
 
     let part1 = patterns
         .iter()
-        .map(|(pattern, ctgs_counts)| dp_matches(&pattern, &ctgs_counts, 0))
+        .map(|(pattern, ctgs_counts)| {
+            DP_MATCHES.lock().cache_clear();
+            dp_matches(&pattern, &ctgs_counts, 0)
+        })
         .sum::<u64>();
 
     let part2 = patterns
@@ -64,18 +58,20 @@ pub fn run(args: &Args) -> Answer {
 
             (unfolded_pattern, ctgs_counts.repeat(5))
         })
-        .map(|(pattern, ctgs_counts)| dp_matches(&pattern, &ctgs_counts, 0))
+        .map(|(pattern, ctgs_counts)| {
+            DP_MATCHES.lock().cache_clear();
+            dp_matches(&pattern, &ctgs_counts, 0)
+        })
         .sum::<u64>();
-
-    // part 2
-    // 290084770204 is too low
 
     (part1.to_string(), part2.to_string())
 }
 
 #[cached(
-    key = "String",
-    convert = r#"{ dp_key2(pattern, exp_counts, curr_ctgs) }"#
+    key = "(usize, usize, u8)",
+    create = r##"{ SizedCache::with_size(10000) }"##,
+    ty = "SizedCache<(usize, usize, u8), u64>",
+    convert = r#"{ (pattern.len(), exp_counts.len(), curr_ctgs) }"#
 )]
 fn dp_matches(pattern: &[Spring], exp_counts: &[u8], curr_ctgs: u8) -> u64 {
     // this is the easiest one to get right! We have no expected broken left, so it's either 1 or 0
@@ -148,21 +144,4 @@ fn remove_dot_runs(pattern: &str) -> String {
     }
 
     output_pattern
-}
-
-fn dp_key2(pattern: &[Spring], ctgs_counts: &[u8], curr_ctgs: u8) -> String {
-    let mut out = String::with_capacity(1 + pattern.len() + ctgs_counts.len() * 2);
-
-    for spring in pattern {
-        out.push(spring.as_char());
-    }
-
-    for count in ctgs_counts {
-        out.push('-');
-        out.push(*count as char);
-    }
-
-    out.push(curr_ctgs as char);
-
-    out
 }
