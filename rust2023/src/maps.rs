@@ -27,6 +27,14 @@ impl Vector {
             col: self.col / by,
         }
     }
+
+    // a unit vector in the direction of from -> self
+    pub fn dir(&self, from: &Vector) -> Vector {
+        Vector {
+            row: (self.row - from.row) / from.row.abs_diff(self.row).max(1) as isize,
+            col: (self.col - from.col) / from.col.abs_diff(self.col).max(1) as isize,
+        }
+    }
 }
 
 pub fn find_inner_points(input_loop: &Vec<Vector>) -> HashSet<Vector> {
