@@ -61,8 +61,7 @@ pub fn run(args: &Args) -> Answer {
 
     let visited_from_top_left = energise_map2(&map, top_left, &max);
 
-    // iterate over the field elements instead
-
+    // TODO there's still plenty to be improved here, we're repeating a lot of graph traversal unnecessarily
     let best_row = (0..height)
         .into_iter()
         .map(|i| {
@@ -104,10 +103,6 @@ pub fn run(args: &Args) -> Answer {
         visited_from_top_left.to_string(),
         best_row.max(best_col).to_string(),
     )
-}
-
-fn find_maximal_walk(map: &Map) -> u64 {
-    1
 }
 
 fn energise_map2(map: &Map, start_from: (Vector, Vector), max: &Vector) -> u64 {
@@ -275,80 +270,3 @@ fn find_next_non_empty(state: &Vec<Vec<char>>, from: &Vector, vector: Vector) ->
 
     curr
 }
-
-// TODO performance optimisation
-// dynamically cache the set of expected visited nodes for a given ray (position, velocity)
-// fn energise_map(map: &Map, entry: (Vector, Vector)) -> HashSet<Vector> {
-//     let mut rays = vec![map.at_pos(entry)]];
-//     let mut visited: HashSet<Vector> = HashSet::new();
-//     let mut ray_vectors: HashSet<(Vector, Vector)> = HashSet::new();
-//
-//     while rays.len() > 0 {
-//         rays = iterate(rays, &map);
-//
-//         // remove any rays we've already seen, matching both position and velocity
-//         rays = rays
-//             .into_iter()
-//             .filter(|&ray| !ray_vectors.contains(&ray))
-//             .collect::<Vec<_>>();
-//
-//         visited.extend(rays.iter().map(|(pos, _)| pos));
-//         ray_vectors.extend(rays.iter());
-//     }
-//
-//     visited
-// }
-
-// fn iterate(rays: Vec<(Vector, Vector)>, map: &Map) -> Vec<(Vector, Vector)> {
-//     rays.into_iter()
-//         .map(|(pos, velocity)| {
-//             let new_pos = pos.add(&velocity);
-//             let tile = if let Some(tile) = map.at_pos(&new_pos) {
-//                 tile
-//             } else {
-//                 // we've probably gone off the edge of the map, let it continue
-//                 return vec![];
-//             };
-//
-//             // is the light ray just continuing through this tile?
-//             let is_horz = velocity.row == 0;
-//             let filters_through = (is_horz && tile == '-') || (!is_horz && tile == '|');
-//             if tile == '.' || filters_through {
-//                 return vec![(new_pos, velocity)];
-//             }
-//
-//             // is the light ray split into two rays?
-//             let is_split = (is_horz && tile == '|') || (!is_horz && tile == '-');
-//             if is_split {
-//                 let v_a = Vector {
-//                     row: velocity.col,
-//                     col: velocity.row,
-//                 };
-//                 let v_b = Vector {
-//                     row: -velocity.col,
-//                     col: -velocity.row,
-//                 };
-//
-//                 return vec![(new_pos, v_a), (new_pos, v_b)];
-//             }
-//
-//             // otherwise, the light ray must be bouncing!
-//             let v_c = if tile == '/' {
-//                 Vector {
-//                     row: -velocity.col,
-//                     col: -velocity.row,
-//                 }
-//             } else if tile == '\\' {
-//                 Vector {
-//                     row: velocity.col,
-//                     col: velocity.row,
-//                 }
-//             } else {
-//                 panic!("Unexpected tile!");
-//             };
-//
-//             vec![(new_pos, v_c)]
-//         })
-//         .flatten()
-//         .collect()
-// }
