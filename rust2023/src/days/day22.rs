@@ -1,5 +1,5 @@
 use crate::common::{get_lines, Answer};
-use crate::{get_epoch_ms, Args};
+use crate::Args;
 use std::collections::{HashSet, VecDeque};
 
 type Brick = (Vec<u32>, Vec<u32>);
@@ -38,14 +38,10 @@ pub fn run(_args: &Args) -> Answer {
     }
 
     let (depends_on, resting_on) = build_dependency_tree(&dropped_bricks);
-    let func_start = get_epoch_ms();
-
     let part_2 = (0..dropped_bricks.len())
         .map(|idx| (disintegration_value(idx, &depends_on, &resting_on).len() - 1) as u32)
         .sum::<u32>();
 
-    let duration = get_epoch_ms() - func_start;
-    println!("part 2 {}s", duration);
     // assume they're safe to disintegrate
     let mut safe_to_disintegrate = vec![true; dropped_bricks.len()];
     for (_, rests_on) in dropped_bricks {
