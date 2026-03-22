@@ -1,8 +1,24 @@
 use crate::common::{get_lines, Answer};
 use crate::Args;
-use std::collections::{HashMap, HashSet, VecDeque};
+use std::collections::{HashMap, VecDeque};
 
 type Point = (i32, i32);
+
+struct Visited(u64);
+
+impl Visited {
+    fn not_visited(&self, other: u32) -> bool {
+        let mask = 2u64.pow(other);
+
+        mask & self.0 == 0
+    }
+
+    fn with(&self, other: u32) -> Visited {
+        let mask = 2u64.pow(other);
+
+        Visited(self.0 + mask)
+    }
+}
 
 pub fn run(_args: &Args) -> Answer {
     let map = if _args.test {
@@ -22,6 +38,8 @@ pub fn run(_args: &Args) -> Answer {
     let slippy_target_index = *slippy_node_map.get(&target).expect("No slippy target");
     let target_index = *node_map.get(&target).expect("No non-slippy target");
 
+    // I tried a DP-DFS, but this was a few times slower than an exhaustive BFS with bit-masked state
+
     let part1 = longest_path(&slippy_graph, slippy_target_index);
     let part2 = longest_path(&graph, target_index);
 
@@ -29,15 +47,18 @@ pub fn run(_args: &Args) -> Answer {
 }
 
 fn longest_path(graph: &Vec<Vec<(usize, u32)>>, target_index: usize) -> u32 {
-    let mut paths: VecDeque<(HashSet<usize>, usize, u32)> = VecDeque::new();
-    paths.push_back((HashSet::from([0]), 0, 0));
-
+    let mut paths: VecDeque<(Visited, usize, u32)> = VecDeque::new();
+    paths.push_back((Visited(1), 0, 0));
     let mut max_walk = 0;
+
+    // I did briefly add a little memoization in here; check if we've already got to the same (at, visited) state, and
+    // if we have but at a greater distance; then ignore that path, but it turned out to be slower. Possibly due to the
+    // hash lookups which we've managed to avoid here, now.
 
     while let Some((visited, at, dist)) = paths.pop_front() {
         let adjacencies = graph[at]
             .iter()
-            .filter(|(adj_index, _)| !visited.contains(adj_index));
+            .filter(|(adj_index, _)| visited.not_visited(*adj_index as u32));
 
         for (adj_index, extra_dist) in adjacencies {
             let new_dist = dist + extra_dist;
@@ -45,43 +66,13 @@ fn longest_path(graph: &Vec<Vec<(usize, u32)>>, target_index: usize) -> u32 {
             if adj_index == &target_index {
                 max_walk = max_walk.max(new_dist);
             } else {
-                let mut new_visited = visited.clone();
-                new_visited.insert(*adj_index);
-                paths.push_back((new_visited, *adj_index, new_dist));
+                paths.push_back((visited.with(*adj_index as u32), *adj_index, new_dist));
             }
         }
     }
 
     max_walk
 }
-// 0         5        10        15        20   22
-// . A . . . . . . . . . . . . . . . . . . . . .  0
-// . # # # # # # # . . . . . . . . . # # # . . .  1
-// . . . . . . . # . . . . . . . . . # . # . . .  2
-// . . . # # # # # . # > C > # . . . # . # . . .  3
-// . . . v . . . . . # . v . # . . . # . # . . .  4
-// . . . B > # # # . # . # . # # # # # . # # # .  5
-// . . . v . . . # . # . # . . . . . . . . . # .  6
-// . . . # # # . # . # . # # # # # # # . # # # .  7
-// . . . . . # . # . # . . . . . . . # . # . . .  8
-// . # # # # # . # . # . # # # # # # # . # # # .  9
-// . # . . . . . # . # . # . . . . . . . . . v . 10
-// . # . # # # . # # # . # # # . . . # # # > H . 11
-// . # . # . v . . . . . . . v . . . # . . . v . 12
-// . # # # . D > # . # # # > G > # . # . . . # . 13
-// . . . . . v . # . # . . . v . # . # . . . # . 14
-// . # # # # # . # # # . # # # . # . # . # # # . 15
-// . # . . . . . . . . . # . . . # . # . # . . . 16
-// . # # # . . . # # # . # # # . # # # . # . . . 17
-// . . . # . . . # . # . . . v . . . . . v . . . 18
-// . # # # . # # # . # . # > E > # . # > F . . . 19
-// . # . . . # . . . # . # . . . # . # . v . . . 20
-// . # # # # # . . . # # # . . . # # # . # # # . 21
-// . . . . . . . . . . . . . . . . . . . . . X . 22
-
-// A=(0, 1),  B=(5, 3),  C=(3, 11),  D=(13, 5),  E=(19, 13),  F=(19, 19),  G=(13, 13),  H=(11, 21),  X=(22, 21)
-
-// A, B, C, D, G, X ... no E, F, or H
 
 fn decompile(
     map: &Vec<Vec<char>>,
@@ -144,8 +135,8 @@ fn decompile(
             // link the two nodes to each other
             graph[prev_node_index].push((curr_node_index, dist_from_prev_node));
 
-            // unless the nodes are uni-directional!
             if !slippy {
+                // only link them both ways if the ^v<> are reversible
                 graph[curr_node_index].push((prev_node_index, dist_from_prev_node));
             }
 
