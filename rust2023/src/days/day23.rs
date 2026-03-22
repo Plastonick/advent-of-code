@@ -114,12 +114,18 @@ fn decompile(
                 }
 
                 match map[p.0 as usize][p.1 as usize] {
-                    '.' => Some((p, true)),
+                    '.' => Some(p),
                     '#' => None,
-                    c => Some((p, !slippy || c == d.2)),
+                    c => {
+                        if !slippy || c == d.2 {
+                            Some(p)
+                        } else {
+                            None
+                        }
+                    }
                 }
             })
-            .filter(|(p, _)| p != &prev_point)
+            .filter(|p| p != &prev_point)
             .collect::<Vec<_>>();
 
         // a point is a node if there's not a single valid way to go (either a fork or an end)
@@ -137,18 +143,18 @@ fn decompile(
 
             // link the two nodes to each other
             graph[prev_node_index].push((curr_node_index, dist_from_prev_node));
-            graph[curr_node_index].push((prev_node_index, dist_from_prev_node));
+
+            // unless the nodes are uni-directional!
+            if !slippy {
+                graph[curr_node_index].push((prev_node_index, dist_from_prev_node));
+            }
 
             (curr_node_index, 0)
         } else {
             (prev_node_index, dist_from_prev_node)
         };
 
-        for (adj, can_progress) in valid_adjacencies {
-            if !can_progress {
-                continue;
-            }
-
+        for adj in valid_adjacencies {
             paths.push_back((prev_node_index, curr_point, adj, dist_from_prev_node + 1));
         }
     }
