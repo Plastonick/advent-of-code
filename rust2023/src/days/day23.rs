@@ -7,14 +7,14 @@ type Point = (i32, i32);
 struct Visited(u64);
 
 impl Visited {
-    fn not_visited(&self, other: u32) -> bool {
-        let mask = 2u64.pow(other);
+    fn not_visited(&self, other: usize) -> bool {
+        let mask = 2u64.pow(other as u32);
 
         mask & self.0 == 0
     }
 
-    fn with(&self, other: u32) -> Visited {
-        let mask = 2u64.pow(other);
+    fn with(&self, other: usize) -> Visited {
+        let mask = 2u64.pow(other as u32);
 
         Visited(self.0 + mask)
     }
@@ -58,7 +58,7 @@ fn longest_path(graph: &Vec<Vec<(usize, u32)>>, target_index: usize) -> u32 {
     while let Some((visited, at, dist)) = paths.pop_front() {
         let adjacencies = graph[at]
             .iter()
-            .filter(|(adj_index, _)| visited.not_visited(*adj_index as u32));
+            .filter(|(adj_index, _)| visited.not_visited(*adj_index));
 
         for (adj_index, extra_dist) in adjacencies {
             let new_dist = dist + extra_dist;
@@ -66,7 +66,7 @@ fn longest_path(graph: &Vec<Vec<(usize, u32)>>, target_index: usize) -> u32 {
             if adj_index == &target_index {
                 max_walk = max_walk.max(new_dist);
             } else {
-                paths.push_back((visited.with(*adj_index as u32), *adj_index, new_dist));
+                paths.push_back((visited.with(*adj_index), *adj_index, new_dist));
             }
         }
     }
