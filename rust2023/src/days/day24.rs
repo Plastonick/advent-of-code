@@ -31,42 +31,25 @@ pub fn run(_args: &Args) -> Answer {
 }
 
 fn collides_in_range_xy(a: &Hailstone, b: &Hailstone, min: f64, max: f64) -> bool {
-    // println!();
-
     let Some((x, y)) = path_collision(a, b) else {
         return false;
     };
 
-    if min <= x && x <= max && min <= y && y <= max {
-        // println!("INSIDE area");
-        true
-    } else {
-        // println!("outside area");
-        false
-    }
+    min <= x && x <= max && min <= y && y <= max
 }
-
-// ay = bx + c
-// iy = jx + k
-//
-// x = (c - k) / (j - b)
 
 fn path_collision(a: &Hailstone, b: &Hailstone) -> Option<(f64, f64)> {
     let (a_grad, a_intercept) = decompose(a);
     let (b_grad, b_intercept) = decompose(b);
 
-    // println!(
-    //     "({}, {}, {}) and ({}, {}, {})",
-    //     a.0[0], a.0[1], a.0[2], b.0[0], b.0[1], b.0[2]
-    // );
-
-    // dbg!(a, b, a_grad, a_intercept, b_grad, b_intercept);
     if a_grad == b_grad {
-        // println!("lines are parallel");
-
         return None;
     }
 
+    // ay = bx + c
+    // iy = jx + k
+    //
+    // x = (c - k) / (j - b)
     let x_intercept = (a_intercept - b_intercept) / (b_grad - a_grad);
     let y_intercept = a_grad * x_intercept + a_intercept;
 
@@ -84,7 +67,7 @@ fn path_collision(a: &Hailstone, b: &Hailstone) -> Option<(f64, f64)> {
 }
 
 fn decompose(a: &Hailstone) -> (f64, f64) {
-    // dy/dx
+    // m = dy/dx
     let gradient = a.1[1] / a.1[0];
     // y - mx = c
     let intercept = a.0[1] - (gradient * a.0[0]);
